@@ -3,7 +3,6 @@ import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
-    private count = 0;
 
     constructor() {
         super({
@@ -27,8 +26,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             ],
             errorFormat: 'pretty',
         });
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
     }
 
     async enableShutdownHooks(app: INestApplication): Promise<void> {
