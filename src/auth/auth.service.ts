@@ -1,15 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { user } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
+import { User } from '../user/entities/user.entity';
 
 @Injectable()
 export class AuthService {
-    constructor(private readonly jwtService: JwtService) { }
+    constructor(private readonly jwtService: JwtService, private readonly prisma: PrismaService) { }
 
     async validateUser(username: string, password: string): Promise<any> {
-        // Aquí implementamos la lógica de verificación de usuario y contraseña
-        // Consultar una base de datos para buscar el usuario
-        const user = { name: "Lola", password: "ggg" };
-        if (user && user.password === password) {
+        const user: User = await this.prisma.user.findFirst({ where: { username, password } });
+        if (user && user.password === password && user.username === username) {
             return user;
         }
         return null;

@@ -1,4 +1,5 @@
 import { user } from "@prisma/client";
+import { Role } from "../../constants/role";
 
 export class User implements user {
     id: number;
