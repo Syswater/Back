@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { user } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { User } from '../user/entities/user.entity';
+import { user } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -16,8 +16,8 @@ export class AuthService {
         return null;
     }
 
-    async generateJwtToken(userId: string): Promise<string> {
-        const payload = { userId };
+    async generateJwtToken(user: user): Promise<string> {
+        const payload = { user };
         return this.jwtService.sign(payload);
     }
 }
