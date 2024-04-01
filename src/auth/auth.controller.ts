@@ -12,7 +12,7 @@ export class AuthController {
         if (!user) {
             throw new UnauthorizedException('Invalid credentials');
         }
-        const token = await this.authService.generateJwtToken(user.id);
+        const token = await this.authService.generateJwtToken(user);
         return { token };
     }
 
