@@ -6,7 +6,7 @@ import { CreateRouteInput } from './dto/create-route.input';
 import { UpdateRouteInput } from './dto/update-route.input copy';
 import { RouteDto } from './dto/route.output';
 import { DeleteRouteDto } from './dto/delete-route.dto';
-import { Route } from './entities/route.entity';
+import { SearchRouteInput } from './dto/search-route.input';
 
 @Auth()
 @Controller('route')
@@ -15,8 +15,8 @@ export class RouteController {
     constructor(private readonly routeService: RouteService) { }
 
     @Get('findAll')
-    async findAll(): Promise<RouteDto[]> {
-        return await this.routeService.getRoutes();
+    async findAll(@Body() searchInput: SearchRouteInput): Promise<RouteDto[]> {
+        return await this.routeService.getRoutes(searchInput);
     }
 
     @Auth(Role.ADMIN)
@@ -35,8 +35,6 @@ export class RouteController {
     async update(@Body() route: UpdateRouteInput): Promise<RouteDto> {
         try {
             const updatedRoute = await this.routeService.update(route);
-            console.log(updatedRoute);
-
             return updatedRoute;
         } catch (error) {
             throw new BadRequestException("Los datos proporcionados son incorrectos");

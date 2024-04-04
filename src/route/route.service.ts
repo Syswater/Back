@@ -1,19 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Route } from './entities/route.entity';
 import { CreateRouteInput } from './dto/create-route.input';
 import { UpdateRouteInput } from './dto/update-route.input copy';
 import { convertWeekdayEnumToString, convertWeekdaysToEnum, splitWeekdaysString } from '../constants/weekday';
 import { RouteDto } from './dto/route.output';
 import { RouteError, RouteErrorCode } from '../exceptions/route-error';
 import { dbHandleError } from '../exceptions/db_handler';
+import { SearchRouteInput } from './dto/search-route.input';
 
 @Injectable()
 export class RouteService {
 
     constructor(private readonly prisma: PrismaService) { }
 
-    async getRoutes(): Promise<RouteDto[]> {
+    async getRoutes(searchInput: SearchRouteInput): Promise<RouteDto[]> {
+        const { filter } = searchInput;
+
         const routes = await this.prisma.route.findMany({
             select: {
                 id: true,
@@ -21,6 +23,11 @@ export class RouteService {
                 location: true,
                 weekdays: true,
                 price: true
+            }, where: {
+                OR: [
+                    { name: { contains: filter } },
+                    { location: { contains: filter } }
+                ]
             }
         });
 
@@ -40,7 +47,7 @@ export class RouteService {
     async update(route: UpdateRouteInput): Promise<RouteDto> {
         const id: number = route.id;
         const { weekdays, ...routeInfo } = route
-        const routeDays: string = convertWeekdayEnumToString(route.weekdays);
+        const routeDays = weekdays ? convertWeekdayEnumToString(weekdays) : undefined;
         const updated_route = await this.prisma.route.update({
             where: { id },
             data: { ...routeInfo, weekdays: routeDays }
