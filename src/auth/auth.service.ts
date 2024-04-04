@@ -20,6 +20,6 @@ export class AuthService {
     async generateJwtToken(user: User): Promise<string> {
         const dto: UserDto = this.userService.toDto(user)
         const payload = { user: dto };
-        return this.jwtService.sign(payload);
+        return await this.jwtService.signAsync(payload);
     }
 }

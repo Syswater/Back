@@ -7,4 +7,4 @@ import { RouteController } from './route.controller';
   providers: [RouteService, PrismaService],
   controllers: [RouteController]
 })
-export class RouteModule {}
+export class RouteModule { }

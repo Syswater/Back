@@ -7,10 +7,14 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
 import { RouteModule } from './route/route.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { RolesAuthGuard } from './auth/guards/roles-auth.guard';
 
 @Module({
   imports: [AuthModule,
     JwtModule.register({
+      global: true,
       secret: process.env.SECRET,
       signOptions: { expiresIn: '24h' },
     }),

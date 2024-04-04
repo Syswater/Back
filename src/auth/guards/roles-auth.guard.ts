@@ -1,29 +1,31 @@
-import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { Injectable, ExecutionContext, UnauthorizedException, CanActivate, ForbiddenException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { Role } from '../../constants/role';
+import { User } from '../../user/entities/user.entity';
+import { METADATA_ROLES } from '../decorators/roles.decorator';
 
 @Injectable()
-export class RolesAuthGuard extends JwtAuthGuard {
-    constructor(private readonly allowedRoles: string[]) {
-        super();
-    }
+export class RolesAuthGuard implements CanActivate {
+    constructor(private reflector: Reflector) { }
 
-    canActivate(context: ExecutionContext) {
-        const isAuth = super.canActivate(context);
-        if (!isAuth) {
-            return false;
-        }
+    canActivate(context: ExecutionContext): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+            const requiredRoles = this.reflector.getAllAndOverride<Role[]>(METADATA_ROLES, [
+                context.getHandler(),
+                context.getClass(),
+            ]);
 
-        const request = context.switchToHttp().getRequest();
-        const user = request.user;
-        if (!user || !user.roles) {
-            throw new UnauthorizedException('User does not have required roles');
-        }
+            if (!requiredRoles || requiredRoles.length == 0) {
+                resolve(true);
+            }
 
-        const hasRole = user.roles.some(role => this.allowedRoles.includes(role));
-        if (!hasRole) {
-            throw new UnauthorizedException('User does not have required roles');
-        }
-
-        return true;
+            const { user } = context.switchToHttp().getRequest();
+            const hasRole = requiredRoles.some((role) => user.user?.roles ? User.getRoles(user.user.roles).includes(role) : false);
+            if (hasRole) {
+                resolve(true);
+            } else {
+                reject(new UnauthorizedException());
+            }
+        });
     }
 }
