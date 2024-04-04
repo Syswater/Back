@@ -10,6 +10,7 @@ import { RouteModule } from './route/route.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesAuthGuard } from './auth/guards/roles-auth.guard';
+import { TriggerService } from './prisma/trigger/trigger.service';
 
 @Module({
   imports: [AuthModule,
