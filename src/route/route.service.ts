@@ -14,7 +14,16 @@ export class RouteService {
     constructor(private readonly prisma: PrismaService) { }
 
     async getRoutes(searchInput: SearchRouteInput): Promise<RouteDto[]> {
+        let where = {}
         const { filter } = searchInput;
+        if (filter) {
+            where = {
+                OR: [
+                    { name: { contains: filter } },
+                    { location: { contains: filter } }
+                ]
+            }
+        }
 
         const routes = await this.prisma.route.findMany({
             select: {
@@ -23,12 +32,7 @@ export class RouteService {
                 location: true,
                 weekdays: true,
                 price: true
-            }, where: {
-                OR: [
-                    { name: { contains: filter } },
-                    { location: { contains: filter } }
-                ]
-            }
+            }, where
         });
 
         return routes.map(route => ({
