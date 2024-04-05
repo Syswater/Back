@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
 import { RouteModule } from './route/route.module';
+import { CustomerModule } from './customer/customer.module';
 
 @Module({
   imports: [AuthModule,
@@ -16,7 +17,8 @@ import { RouteModule } from './route/route.module';
     }),
     UserModule,
     PrismaModule,
-    RouteModule,],
+    RouteModule,
+    CustomerModule,],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
 })
