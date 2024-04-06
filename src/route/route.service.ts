@@ -61,10 +61,10 @@ export class RouteService {
 
     async delete(id: number): Promise<RouteDto> {
         try {
-            const user = await this.prisma.route.findFirst({ where: { id, delete_at: null } });
+            const route = await this.prisma.route.findFirst({ where: { id, delete_at: null } });
 
-            if (!user) {
-                throw new RouteError(RouteErrorCode.ROUTE_NOT_FOUND, "No se encuentra la ruta con el id ${id}");
+            if (!route) {
+                throw new RouteError(RouteErrorCode.ROUTE_NOT_FOUND, `No se encuentra la ruta con el id ${id}`);
             } else {
                 const deletedRoute = await this.prisma.route.delete({
                     where: { id }
@@ -76,7 +76,7 @@ export class RouteService {
         }
     }
 
-    private getRouteDto(routeInfo: { id: number; name: string; location: string; weekdays: string; price: number; update_at: Date; delete_at: Date; }): RouteDto | PromiseLike<RouteDto> {
+    private getRouteDto(routeInfo: { id: number; name: string; location: string; weekdays: string; price: number; update_at: Date; delete_at: Date; }): RouteDto {
         const { update_at, delete_at, ...info } = routeInfo
         return { ...info, weekdays: convertWeekdaysToEnum(splitWeekdaysString(routeInfo.weekdays)) };
     }
