@@ -7,6 +7,7 @@ import { UpdateRouteInput } from './dto/update-route.input copy';
 import { RouteDto } from './dto/route.output';
 import { DeleteRouteDto } from './dto/delete-route.dto';
 import { SearchRouteInput } from './dto/search-route.input';
+import { GetStatusInput } from './dto/get-status.input';
 
 @Auth()
 @Controller('route')
@@ -44,9 +45,14 @@ export class RouteController {
     @Auth(Role.ADMIN)
     @Delete('delete')
     async delete(@Body() params: DeleteRouteDto): Promise<RouteDto> {
-        const deletedRoute = await this.routeService.delete(params.id);
-        return deletedRoute;
+        return await this.routeService.delete(params.id);;
 
+    }
+
+
+    @Get('status')
+    async status(@Body() params: GetStatusInput): Promise<string> {
+        return await this.routeService.getStatus(params.id);;
     }
 
 }

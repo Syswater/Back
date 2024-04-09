@@ -7,6 +7,8 @@ import { RouteDto } from './dto/route.output';
 import { RouteError, RouteErrorCode } from '../exceptions/route-error';
 import { dbHandleError } from '../exceptions/db_handler';
 import { SearchRouteInput } from './dto/search-route.input';
+import { RouteStatus } from '../constants/route-status';
+import { throws } from 'assert';
 
 @Injectable()
 export class RouteService {
@@ -76,7 +78,17 @@ export class RouteService {
         }
     }
 
-    private getRouteDto(routeInfo: { id: number; name: string; location: string; weekdays: string; price: number; update_at: Date; delete_at: Date; }): RouteDto | PromiseLike<RouteDto> {
+    async getStatus(route_id: number) {
+        const status: string = (await this.prisma.distribution.findFirst({ where: { route_id }, orderBy: { update_at: 'desc' } }))?.status
+        if (!status) {
+            throw new RouteError(RouteErrorCode.ROUTE_DOES_NOT_YET_HAVE_DISTRIBUTIONS)
+        }
+        return status;
+    }
+
+    private getRouteDto(routeInfo: {
+        id: number; name: string; location: string; weekdays: string; price: number; update_at: Date; delete_at: Date;
+    }): RouteDto | PromiseLike<RouteDto> {
         const { update_at, delete_at, ...info } = routeInfo
         return { ...info, weekdays: convertWeekdaysToEnum(splitWeekdaysString(routeInfo.weekdays)) };
     }
