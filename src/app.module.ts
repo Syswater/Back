@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
 import { RouteModule } from './route/route.module';
+import { CustomerModule } from './customer/customer.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesAuthGuard } from './auth/guards/roles-auth.guard';
@@ -21,7 +22,8 @@ import { TriggerService } from './prisma/trigger/trigger.service';
     }),
     UserModule,
     PrismaModule,
-    RouteModule,],
+    RouteModule,
+    CustomerModule,],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
 })
