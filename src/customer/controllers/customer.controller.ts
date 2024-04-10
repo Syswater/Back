@@ -11,8 +11,8 @@ import { Auth } from 'src/auth/decorators/auth.decorator';
 @Controller('customer')
 export class CustomerController {
 
-    constructor(private readonly customerService: CustomerService){}
-    
+    constructor(private readonly customerService: CustomerService) { }
+
     @Get('findAll')
     async findAll(@Body() searchInput: SearchCustomerInput): Promise<CustomerDto[]> {
         return await this.customerService.getCustomers(searchInput);
@@ -24,7 +24,7 @@ export class CustomerController {
             const newCustomer = await this.customerService.create(customer);
             return newCustomer;
         } catch (error) {
-            throw new BadRequestException("Los datos proporcionados son incorrectos");
+            throw error;
         }
     }
 
@@ -40,7 +40,7 @@ export class CustomerController {
 
     @Delete('delete')
     async delete(@Body() params: DeleteCustomerInput): Promise<CustomerDto> {
-        const deletedCustomer= await this.customerService.delete(params.id);
+        const deletedCustomer = await this.customerService.delete(params.id);
         return deletedCustomer;
     }
 

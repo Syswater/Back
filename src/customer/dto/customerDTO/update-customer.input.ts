@@ -1,7 +1,7 @@
+import { customer_tape_preference } from "@prisma/client";
 import { IsPositive, IsInt, IsNotEmpty, IsBoolean, Equals, IsEnum, IsString, IsOptional } from "class-validator";
-import { TapePreference } from "src/constants/tape_preference";
 
-export class UpdateCustomerInput{
+export class UpdateCustomerInput {
 
     @IsPositive({ message: "El id debe ser un numero positivo" })
     @IsInt({ message: "El id debe ser un numero entero" })
@@ -16,17 +16,17 @@ export class UpdateCustomerInput{
     @IsOptional()
     neighborhood?: string;
 
-    @IsInt({message: 'El orden de la ruta debe ser un numero entero.'})
+    @IsInt({ message: 'El orden de la ruta debe ser un numero entero.' })
     @IsOptional()
-    @IsPositive({message: 'El orden de la ruta debe ser un valor positivo.'})
+    @IsPositive({ message: 'El orden de la ruta debe ser un valor positivo.' })
     route_order?: number;
 
     @IsOptional()
-    @IsEnum(TapePreference)
-    tape_preference?: TapePreference;
+    @IsEnum(customer_tape_preference)
+    tape_preference?: customer_tape_preference;
 
     @IsOptional()
-    @IsBoolean( {message: 'El campo de contacto debe ser boolean'} )
+    @IsBoolean({ message: 'El campo de contacto debe ser boolean' })
     is_contactable?: boolean;
 
     @IsString()

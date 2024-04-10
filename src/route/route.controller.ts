@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Post, Put, Query } from '@nestjs/common';
 import { RouteService } from './route.service';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { Role } from '../constants/role';
@@ -16,8 +16,9 @@ export class RouteController {
     constructor(private readonly routeService: RouteService) { }
 
     @Get('findAll')
-    async findAll(@Body() searchInput: SearchRouteInput): Promise<RouteDto[]> {
-        return await this.routeService.getRoutes(searchInput);
+    async findAll(
+        @Query("whit_status") whit_status: string, @Query("filter") filter: string): Promise<RouteDto[]> {
+        return await this.routeService.getRoutes({ whit_status: whit_status.toLowerCase() === 'true', filter });
     }
 
     @Auth(Role.ADMIN)

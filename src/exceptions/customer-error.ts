@@ -8,5 +8,6 @@ export class CustomerError extends SsError {
 
 export enum CustomerErrorCode {
     CUSTOMER_NOT_FOUND = 'CUSTOMER_NOT_FOUND',
-    NOTE_NOT_FOUND = 'NOTE_NOT_FOUND'
+    NOTE_NOT_FOUND = 'NOTE_NOT_FOUND',
+    CUSTOMER_ROUTE_NOT_FOUND = 'CUSTOMER_ROUTE_NOT_FOUND'
 }

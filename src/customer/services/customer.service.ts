@@ -3,7 +3,6 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { Customer } from '../entities/customer.entity';
 import { SearchCustomerInput } from '../dto/customerDTO/search-customer.input';
 import { CustomerDto } from '../dto/customerDTO/customer.output';
-import { convertTapeToEnum } from 'src/constants/tape_preference';
 import { CreateCustomerInput } from '../dto/customerDTO/create-customer.input';
 import { UpdateCustomerInput } from '../dto/customerDTO/update-customer.input';
 import { CustomerError, CustomerErrorCode } from 'src/exceptions/customer-error';
@@ -11,7 +10,7 @@ import { CustomerError, CustomerErrorCode } from 'src/exceptions/customer-error'
 @Injectable()
 export class CustomerService {
 
-    constructor(private readonly prisma: PrismaService){}
+    constructor(private readonly prisma: PrismaService) { }
 
     async getCustomers(searchInput: SearchCustomerInput): Promise<CustomerDto[]> {
         let where = {}
@@ -32,20 +31,25 @@ export class CustomerService {
     }
 
     async create(customer: CreateCustomerInput): Promise<CustomerDto> {
-        const newCustomer = await this.prisma.customer.create({
-            data:{
-                ...customer,
-                is_contactable: customer.is_contactable === false? 0:1
-            }
-        })
-        return this.getCustomerDto(newCustomer);
+        const route = await this.prisma.route.findFirst({ where: { id: customer.route_id, delete_at: null } })
+        if (route) {
+            const newCustomer = await this.prisma.customer.create({
+                data: {
+                    ...customer,
+                    is_contactable: customer.is_contactable === false ? 0 : 1
+                }
+            })
+            return this.getCustomerDto(newCustomer);
+        } else {
+            throw new CustomerError(CustomerErrorCode.CUSTOMER_ROUTE_NOT_FOUND);
+        }
     }
 
     async update(customer: UpdateCustomerInput): Promise<CustomerDto> {
         const id: number = customer.id;
         const updated_customer = await this.prisma.customer.update({
             where: { id },
-            data: { ...customer, is_contactable: customer.is_contactable === false? 0:1 }
+            data: { ...customer, is_contactable: customer.is_contactable === false ? 0 : 1 }
         })
         return this.getCustomerDto(updated_customer)
     }
@@ -67,8 +71,7 @@ export class CustomerService {
         const { update_at, delete_at, ...info } = customer;
         return {
             ...info,
-            tape_preference: convertTapeToEnum(customer.tape_preference),
-            is_contactable: customer.is_contactable === 0? false:true
+            is_contactable: customer.is_contactable === 0 ? false : true
         };
     }
 

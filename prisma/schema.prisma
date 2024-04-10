@@ -9,18 +9,18 @@ datasource db {
 }
 
 model customer {
-  id                    Int                     @id @default(autoincrement())
-  address               String                  @db.VarChar(100)
-  neighborhood          String                  @db.VarChar(50)
+  id                    Int                      @id @default(autoincrement())
+  address               String                   @db.VarChar(100)
+  neighborhood          String                   @db.VarChar(50)
   route_order           Int
-  tape_preference       String                  @db.VarChar(15)
-  is_contactable        Int                     @db.TinyInt
-  name                  String?                 @db.VarChar(50)
-  cellphone             String?                 @db.VarChar(11)
-  update_at             DateTime                @default(now()) @db.Timestamp(0)
-  delete_at             DateTime?               @db.Timestamp(0)
+  tape_preference       customer_tape_preference @default(NORMAL)
+  is_contactable        Int                      @db.TinyInt
+  name                  String?                  @db.VarChar(50)
+  cellphone             String?                  @db.VarChar(11)
+  update_at             DateTime                 @default(now()) @db.Timestamp(0)
+  delete_at             DateTime?                @db.Timestamp(0)
   route_id              Int
-  route                 route                   @relation(fields: [route_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_ROU_CUS")
+  route                 route                    @relation(fields: [route_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_ROU_CUS")
   note                  note[]
   order                 order[]
   sale                  sale[]
@@ -31,17 +31,17 @@ model customer {
 }
 
 model distribution {
-  id                   Int                 @id @default(autoincrement())
-  status               String              @db.VarChar(15)
-  date                 DateTime            @db.Date
+  id                   Int                  @id @default(autoincrement())
+  date                 DateTime             @db.Date
   load_up              Int
   broken_containers    Int
-  update_at            DateTime            @default(now()) @db.Timestamp(0)
-  delete_at            DateTime?           @db.Timestamp(0)
+  update_at            DateTime             @default(now()) @db.Timestamp(0)
+  status               distribution_status? @default(PREORDER)
+  delete_at            DateTime?            @db.Timestamp(0)
   route_id             Int
   product_inventory_id Int
-  product_inventory    product_inventory   @relation(fields: [product_inventory_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_PRO_DIS")
-  route                route               @relation(fields: [route_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_ROU_DIS")
+  product_inventory    product_inventory    @relation(fields: [product_inventory_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_PRO_DIS")
+  route                route                @relation(fields: [route_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_ROU_DIS")
   distribution_user    distribution_user[]
   expense              expense[]
   note                 note[]
@@ -158,19 +158,19 @@ model sale {
 }
 
 model transaction_container {
-  id                   Int               @id @default(autoincrement())
-  date                 DateTime          @db.Date
+  id                   Int                        @id @default(autoincrement())
+  date                 DateTime                   @db.Date
   value                Int
-  type                 String            @db.VarChar(30)
+  type                 transaction_container_type
   total                Int
-  update_at            DateTime          @default(now()) @db.Timestamp(0)
-  delete_at            DateTime?         @db.Timestamp(0)
+  update_at            DateTime                   @default(now()) @db.Timestamp(0)
+  delete_at            DateTime?                  @db.Timestamp(0)
   customer_id          Int
   user_id              Int
   product_inventroy_id Int
-  customer             customer          @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_CUS_TRA_CO")
-  product_inventory    product_inventory @relation(fields: [product_inventroy_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_PRO_TRA_CO")
-  user                 user              @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_USE_TRA_CO")
+  customer             customer                   @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_CUS_TRA_CO")
+  product_inventory    product_inventory          @relation(fields: [product_inventroy_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_PRO_TRA_CO")
+  user                 user                       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_USE_TRA_CO")
 
   @@index([customer_id], map: "FK_CUS_TRA_CO_idx")
   @@index([product_inventroy_id], map: "FK_PRO_TRA_CO_idx")
@@ -178,18 +178,18 @@ model transaction_container {
 }
 
 model transaction_payment {
-  id             Int       @id @default(autoincrement())
-  date           DateTime  @db.Date
+  id             Int                                 @id @default(autoincrement())
+  date           DateTime                            @db.Date
   value          Int
-  type           String    @db.VarChar(30)
-  payment_method String?   @db.VarChar(30)
+  type           transaction_payment_type
+  payment_method transaction_payment_payment_method? @default(EFECTIVO)
   total          Int?
-  update_at      DateTime  @default(now()) @db.Timestamp(0)
-  delete_at      DateTime? @db.Timestamp(0)
+  update_at      DateTime                            @default(now()) @db.Timestamp(0)
+  delete_at      DateTime?                           @db.Timestamp(0)
   customer_id    Int
   user_id        Int
-  customer       customer  @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_CUS_TRA_PA")
-  user           user      @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_USE_TRA_PA")
+  customer       customer                            @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_CUS_TRA_PA")
+  user           user                                @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_USE_TRA_PA")
 
   @@index([customer_id], map: "FK_CUS_TRA_PA_idx")
   @@index([user_id], map: "FK_USE_TRA_PA_idx")
@@ -208,4 +208,33 @@ model user {
   sale                  sale[]
   transaction_container transaction_container[]
   transaction_payment   transaction_payment[]
+}
+
+enum transaction_container_type {
+  BORROWED
+  RETURNED
+}
+
+enum transaction_payment_type {
+  PAID
+  SALE
+  DEBT
+}
+
+enum customer_tape_preference {
+  NORMAL
+  SERVIFACIL
+}
+
+enum transaction_payment_payment_method {
+  EFECTIVO
+  NEQUI
+  DAVIPLATA
+}
+
+enum distribution_status {
+  PREORDER
+  OPENED
+  CLOSE_REQUEST
+  CLOSED
 }
