@@ -18,7 +18,7 @@ export class RouteController {
     @Get('findAll')
     async findAll(
         @Query("whit_status") whit_status: string, @Query("filter") filter: string): Promise<RouteDto[]> {
-        return await this.routeService.getRoutes({ whit_status: whit_status.toLowerCase() === 'true', filter });
+        return await this.routeService.getRoutes({ whit_status: whit_status?.toLowerCase() === 'true', filter });
     }
 
     @Auth(Role.ADMIN)
