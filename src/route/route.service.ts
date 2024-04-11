@@ -25,7 +25,7 @@ export class RouteService {
                 location: true,
                 weekdays: true,
                 price: true,
-                distribution: whit_status ? { select: { status: true }, orderBy: { update_at: 'desc' } } : undefined
+                distribution: whit_status ? { select: { status: true }, orderBy: { update_at: 'desc' }, take: 1 } : undefined
             }, where
         });
 
