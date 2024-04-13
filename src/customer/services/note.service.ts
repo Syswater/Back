@@ -27,10 +27,20 @@ export class NoteService{
     }
 
     async update(note: UpdateNoteInput): Promise<NoteDto> {
-        const id: number = note.id;
+        const {id, distribution_id, customer_id, description} = note;
+        let distribution = null;
+        if(distribution_id !== undefined && distribution_id !== null){
+            distribution = distribution_id? await this.prisma.distribution.findFirstOrThrow({where: {id: distribution_id}}) : undefined;
+        }else if(distribution_id === null){
+            distribution = null;
+        }
+        const customer = customer_id? await this.prisma.customer.findFirstOrThrow({where: {id: customer_id}}): undefined;
         const updated_note = await this.prisma.note.update({
             where: { id },
-            data: { ...note }
+            data: { description,
+                    customer: customer_id? {connect: {id: customer.id}}:undefined,
+                    distribution: distribution_id? distribution_id !== null? {connect: {id: distribution_id}}:{}:undefined
+                }
         });
         return this.getNoteDto(updated_note)
     }

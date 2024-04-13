@@ -85,12 +85,12 @@ model expense_category {
 }
 
 model note {
-  id              Int          @id @default(autoincrement())
-  description     String       @db.LongText
-  distribution_id Int
+  id              Int           @id @default(autoincrement())
+  description     String        @db.LongText
+  distribution_id Int?
   customer_id     Int
-  customer        customer     @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_CUS_NOT")
-  distribution    distribution @relation(fields: [distribution_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DIS_NOT")
+  customer        customer      @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_CUS_NOT")
+  distribution    distribution? @relation(fields: [distribution_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DIS_NOT")
 
   @@index([customer_id], map: "FK_CUS_NOT_idx")
   @@index([distribution_id], map: "FK_DIS_NOT_idx")

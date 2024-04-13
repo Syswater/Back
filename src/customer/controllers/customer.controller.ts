@@ -14,8 +14,8 @@ export class CustomerController {
     constructor(private readonly customerService: CustomerService) { }
 
     @Get('findAll')
-    async findAll(@Query("filter") filter: string, @Query("with_notes") with_notes: string): Promise<CustomerDto[]> {
-        return await this.customerService.getCustomers(filter, with_notes?.toLowerCase() === 'true');
+    async findAll(@Query("filter") filter: string, @Query("with_notes") with_notes: string, @Query("route_id") route_id: string): Promise<CustomerDto[]> {
+        return await this.customerService.getCustomers(filter, with_notes?.toLowerCase() === 'true', parseInt(route_id, 10));
     }
 
     @Post('create')

@@ -6,7 +6,7 @@ export class TriggersService {
   constructor(private readonly prisma: PrismaService) {
     this.prisma.$use(async (params, next) => {
 
-      if (params.action == 'update') {
+      if (params.action == 'update' && params.model != 'note') {
         params.args.data = {
           ...params.args.data,
           update_at: new Date(),

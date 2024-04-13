@@ -12,19 +12,23 @@ export class CustomerService {
 
     constructor(private readonly prisma: PrismaService) { }
 
-    async getCustomers(filter: string, with_notes:boolean): Promise<CustomerDto[]> {
-        let where = {}
+    async getCustomers(filter: string, with_notes:boolean, route_id:number): Promise<CustomerDto[]> {
+        let where = {};
         if (filter) {
             where = {
                 OR: [
                     { name: { contains: filter } },
-                    { cellphone: { contains: filter } }
+                    { cellphone: { contains: filter } },
                 ]
             }
         }
 
         const customers = await this.prisma.customer.findMany({
-            where,
+            where: {
+                route_id,
+                delete_at: null,
+                ...where
+            },
             select: {
                 id: true,
                 address: true,
@@ -43,7 +47,8 @@ export class CustomerService {
                     distribution_id: true,
                     customer_id: true
                 }} : undefined
-            }
+            },
+            orderBy: {route_order: 'asc'}
         });
 
         return customers.map(customer => 
@@ -133,6 +138,8 @@ export class CustomerService {
 
         if (!customer) {
             throw new CustomerError(CustomerErrorCode.CUSTOMER_NOT_FOUND, `No se encuentra el cliente con el id ${id}`);
+
+
         } else {
             const deletedCustomer = await this.prisma.customer.delete({
                 where: { id },
@@ -156,6 +163,15 @@ export class CustomerService {
                     }}
                 }
             });
+
+            const nextCustomer = await this.prisma.customer.findFirst({where:{route_order:deletedCustomer.route_order + 1, delete_at: null}});
+            if(nextCustomer){
+                const nextCustomerDto = new UpdateCustomerInput();
+                nextCustomerDto.id = nextCustomer.id;
+                nextCustomerDto.route_order = deletedCustomer.route_order;
+                await this.update(nextCustomerDto);
+            }
+
             return this.getCustomerDto({
                 id: deletedCustomer.id,
                 address: deletedCustomer.address,
@@ -184,26 +200,26 @@ export class CustomerService {
     async updateRouteOrder(current_route_order:number, past_route_order?:number, currentId?:number){
         if(!past_route_order){
             await this.prisma.customer.updateMany({
-                where: { route_order: {gte: current_route_order}, id:{not: currentId}},
+                where: { route_order: {gte: current_route_order}, id:{not: currentId}, delete_at: null},
                 data:{route_order: {increment: 1} }
             });
             return;
         }
         if(current_route_order > past_route_order){
             await this.prisma.customer.updateMany({
-                where: {route_order: {lte: current_route_order, gt: past_route_order}, id:{not: currentId}},
+                where: {route_order: {lte: current_route_order, gt: past_route_order}, id:{not: currentId}, delete_at: null},
                 data:{ route_order: {decrement: 1}}
             });
             return;
         }
         await this.prisma.customer.updateMany({
-            where: {route_order: {gte: current_route_order, lt: past_route_order}, id:{not: currentId}},
+            where: {route_order: {gte: current_route_order, lt: past_route_order}, id:{not: currentId}, delete_at: null},
             data:{route_order: {increment: 1}}
         });
     }
 
     async validateRouteOrder(current_route_order:number ,route_id: number): Promise<number>{
-        const higher = await this.prisma.customer.findMany({where: {route_id}, orderBy: {route_order: 'desc'}, take: 1});
+        const higher = await this.prisma.customer.findMany({where: {route_id, delete_at: null}, orderBy: {route_order: 'desc'}, take: 1});
         if(current_route_order > higher[0].route_order){
             return higher[0].route_order + 1;
         }
