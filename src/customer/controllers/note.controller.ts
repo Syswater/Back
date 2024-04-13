@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Post, Put } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Delete, Get, Post, Put, Query } from "@nestjs/common";
 import { Auth } from "src/auth/decorators/auth.decorator";
 import { NoteService } from '../services/note.service';
 import { SearchNoteInput } from "../dto/noteDTO/search-note.input";
@@ -14,8 +14,8 @@ export class NoteController {
     constructor(private readonly noteService: NoteService){}
     
     @Get('findAll')
-    async findAll(@Body() searchInput: SearchNoteInput): Promise<NoteDto[]> {
-        return await this.noteService.getNotes(searchInput);
+    async findAll(): Promise<NoteDto[]> {
+        return await this.noteService.getNotes();
     }
 
     @Post('create')

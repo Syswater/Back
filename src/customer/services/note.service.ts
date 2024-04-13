@@ -12,20 +12,8 @@ export class NoteService{
 
     constructor(private readonly prisma:PrismaService){}
 
-    async getNotes(searchInput: SearchNoteInput): Promise<NoteDto[]> {
-        let where = {}
-        const { filter } = searchInput;
-        if (filter) {
-            where = {
-                OR: [
-                    { description: { contains: filter } }
-                ]
-            }
-        }
-
-        const notes = await this.prisma.note.findMany({
-            where
-        });
+    async getNotes(): Promise<NoteDto[]> {
+        const notes = await this.prisma.note.findMany({where:{customer_id: null}});
         return notes.map(customer => this.getNoteDto(customer));
     }
 
@@ -34,7 +22,7 @@ export class NoteService{
             data:{
                 ...note
             }
-        })
+        });
         return this.getNoteDto(newNote);
     }
 
@@ -43,7 +31,7 @@ export class NoteService{
         const updated_note = await this.prisma.note.update({
             where: { id },
             data: { ...note }
-        })
+        });
         return this.getNoteDto(updated_note)
     }
 

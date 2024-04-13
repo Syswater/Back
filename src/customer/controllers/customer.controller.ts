@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { CustomerService } from '../services/customer.service';
 import { SearchCustomerInput } from '../dto/customerDTO/search-customer.input';
 import { CustomerDto } from '../dto/customerDTO/customer.output';
@@ -14,8 +14,8 @@ export class CustomerController {
     constructor(private readonly customerService: CustomerService) { }
 
     @Get('findAll')
-    async findAll(@Body() searchInput: SearchCustomerInput): Promise<CustomerDto[]> {
-        return await this.customerService.getCustomers(searchInput);
+    async findAll(@Query("filter") filter: string, @Query("with_notes") with_notes: string): Promise<CustomerDto[]> {
+        return await this.customerService.getCustomers(filter, with_notes?.toLowerCase() === 'true');
     }
 
     @Post('create')
