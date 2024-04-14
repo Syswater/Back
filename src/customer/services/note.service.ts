@@ -12,7 +12,7 @@ export class NoteService {
     constructor(private readonly prisma: PrismaService) { }
 
     async getNotes(): Promise<NoteDto[]> {
-        const notes = await this.prisma.note.findMany({ where: { customer_id: null } });
+        const notes = await this.prisma.note.findMany();
         return notes.map(customer => this.getNoteDto(customer));
     }
 
