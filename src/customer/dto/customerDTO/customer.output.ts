@@ -12,4 +12,6 @@ export class CustomerDto {
     cellphone: string | null;
     route_id: number;
     note?: NoteDto[];
+    totalDebt?: number;
+    borrowedContainers?: number;
 }

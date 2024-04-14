@@ -12,6 +12,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesAuthGuard } from './auth/guards/roles-auth.guard';
 import { TriggerService } from './prisma/trigger/trigger.service';
+import { OrderModule } from './order/order.module';
 
 @Module({
   imports: [AuthModule,
@@ -23,7 +24,8 @@ import { TriggerService } from './prisma/trigger/trigger.service';
     UserModule,
     PrismaModule,
     RouteModule,
-    CustomerModule,],
+    CustomerModule,
+    OrderModule,],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
 })

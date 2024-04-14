@@ -23,7 +23,7 @@ export class CustomerService {
             }
         }
 
-        const customers = await this.prisma.customer.findMany({
+        let customers = await this.prisma.customer.findMany({
             where: {
                 route_id,
                 delete_at: null,
@@ -41,45 +41,46 @@ export class CustomerService {
                 route_id: true,
                 update_at: true,
                 delete_at: true,
-                note: with_notes? {select: {
-                    id: true,
-                    description: true,
-                    distribution_id: true,
-                    customer_id: true
-                }} : undefined
+                note: with_notes? {select: {id: true,description: true,distribution_id: true,customer_id: true}} : undefined,
+                transaction_payment: {
+                    where: {
+                        OR: [
+                            { type: 'DEBT' },
+                            { type: 'SALE' },
+                    
+                        ]
+                    },
+                    select: {total: true},
+                    orderBy: {id: 'desc'},
+                    take: 1
+                },
+                transaction_container:{
+                    select: {total: true},
+                    orderBy: {id: 'desc'},
+                    take: 1
+                }
             },
             orderBy: {route_order: 'asc'}
         });
 
-        return customers.map(customer => 
-            this.getCustomerDto({
-                id: customer.id,
-                address: customer.address,
-                neighborhood: customer.neighborhood,
-                route_order: customer.route_order,
-                tape_preference: customer.tape_preference,
-                is_contactable: customer.is_contactable,
-                name: customer.name,
-                cellphone: customer.cellphone,
-                route_id: customer.route_id,
-                update_at: customer.update_at,
-                delete_at: customer.delete_at,
-            }, customer.note)
-        );
+        return customers.map(customer => {
+            const {note, transaction_payment, transaction_container, ...info} = customer;
+            return this.getCustomerDto({customer: info, note, totalDebt: transaction_payment[0]?.total, borrowedContainers: transaction_container[0]?.total});
+        });
     }
 
     async create(customer: CreateCustomerInput): Promise<CustomerDto> {
         const route = await this.prisma.route.findFirst({ where: { id: customer.route_id, delete_at: null } })
         if (route) {
             customer.route_order = await this.validateRouteOrder(customer.route_order, route.id);
-            this.updateRouteOrder(customer.route_order);
+            this.updateRouteOrder({current_route_order: customer.route_order});
             const newCustomer = await this.prisma.customer.create({
                 data: {
                     ...customer,
                     is_contactable: customer.is_contactable === false ? 0 : 1
                 }
             });
-            return this.getCustomerDto(newCustomer, []);
+            return this.getCustomerDto({customer:newCustomer});
         } else {
             throw new CustomerError(CustomerErrorCode.CUSTOMER_ROUTE_NOT_FOUND);
         }
@@ -94,110 +95,52 @@ export class CustomerService {
         }
         const updated_customer = await this.prisma.customer.update({
             where: { id },
-            data: { ...customer, is_contactable: customer.is_contactable === false ? 0 : 1 },
-            select: {
-                id: true,
-                address: true,
-                neighborhood: true,
-                route_order: true,
-                tape_preference: true,
-                is_contactable: true,
-                name: true,
-                cellphone: true,
-                route_id: true,
-                update_at: true,
-                delete_at: true,
-                note: {select: {
-                    id: true,
-                    description: true,
-                    distribution_id: true,
-                    customer_id: true
-                }}
-            }
+            data: { ...customer, is_contactable: customer.is_contactable === false ? 0 : 1 }
         });
         if(updated_customer.route_order != past_route_order){
-            this.updateRouteOrder(updated_customer.route_order, past_route_order, id);
+            this.updateRouteOrder({current_route_order:updated_customer.route_order, past_route_order: past_route_order, currentId:id});
         }
-        return this.getCustomerDto({
-            id: updated_customer.id,
-            address: updated_customer.address,
-            neighborhood: updated_customer.neighborhood,
-            route_order: updated_customer.route_order,
-            tape_preference: updated_customer.tape_preference,
-            is_contactable: updated_customer.is_contactable,
-            name: updated_customer.name,
-            cellphone: updated_customer.cellphone,
-            route_id: updated_customer.route_id,
-            update_at: updated_customer.update_at,
-            delete_at: updated_customer.delete_at,
-        }, updated_customer.note)
+        return this.getCustomerDto({ customer:updated_customer});
     }
 
     async delete(id: number): Promise<CustomerDto> {
         const customer = await this.prisma.customer.findFirst({ where: { id, delete_at: null } });
-
         if (!customer) {
             throw new CustomerError(CustomerErrorCode.CUSTOMER_NOT_FOUND, `No se encuentra el cliente con el id ${id}`);
-
-
         } else {
             const deletedCustomer = await this.prisma.customer.delete({
-                where: { id },
-                select: {
-                    id: true,
-                    address: true,
-                    neighborhood: true,
-                    route_order: true,
-                    tape_preference: true,
-                    is_contactable: true,
-                    name: true,
-                    cellphone: true,
-                    route_id: true,
-                    update_at: true,
-                    delete_at: true,
-                    note: {select: {
-                        id: true,
-                        description: true,
-                        distribution_id: true,
-                        customer_id: true
-                    }}
-                }
+                where: { id }
             });
-
             const nextCustomer = await this.prisma.customer.findFirst({where:{route_order:deletedCustomer.route_order + 1, delete_at: null}});
             if(nextCustomer){
-                const nextCustomerDto = new UpdateCustomerInput();
-                nextCustomerDto.id = nextCustomer.id;
-                nextCustomerDto.route_order = deletedCustomer.route_order;
-                await this.update(nextCustomerDto);
+                await this.updateRouteOrder({current_route_order:deletedCustomer.route_order, past_route_order:nextCustomer.route_order,currentId:deletedCustomer.id, isDelete:true});
             }
 
-            return this.getCustomerDto({
-                id: deletedCustomer.id,
-                address: deletedCustomer.address,
-                neighborhood: deletedCustomer.neighborhood,
-                route_order: deletedCustomer.route_order,
-                tape_preference: deletedCustomer.tape_preference,
-                is_contactable: deletedCustomer.is_contactable,
-                name: deletedCustomer.name,
-                cellphone: deletedCustomer.cellphone,
-                route_id: deletedCustomer.route_id,
-                update_at: deletedCustomer.update_at,
-                delete_at: deletedCustomer.delete_at,
-            }, deletedCustomer.note);
+            return this.getCustomerDto({customer: deletedCustomer});
         }
     }
 
-    private getCustomerDto(customer: Customer, note: NoteDto[]): CustomerDto {
+    private getCustomerDto(values: {customer: Customer, note?: NoteDto[], totalDebt?:number, borrowedContainers?:number}): CustomerDto {
+        const {customer, note, totalDebt, borrowedContainers} = values;
         const { update_at, delete_at, ...info } = customer;
         return {
             ...info,
             is_contactable: customer.is_contactable === 0 ? false : true,
-            note
+            note,
+            totalDebt,
+            borrowedContainers
         };
     }
 
-    async updateRouteOrder(current_route_order:number, past_route_order?:number, currentId?:number){
+    async updateRouteOrder(options: {current_route_order:number, past_route_order?:number, currentId?:number, isDelete?:boolean}){
+        const {current_route_order, past_route_order, currentId, isDelete} = options;
+        if(isDelete){
+            await this.prisma.customer.updateMany({
+                where: {route_order: {gte: current_route_order}, id:{not: currentId}, delete_at: null},
+                data:{route_order: {decrement: 1}}
+            });
+            return;
+        }
         if(!past_route_order){
             await this.prisma.customer.updateMany({
                 where: { route_order: {gte: current_route_order}, id:{not: currentId}, delete_at: null},
@@ -227,6 +170,28 @@ export class CustomerService {
             return 1;
         }
         return current_route_order;
+    }
+
+    async getTotalTransactionValues(customer:CustomerDto): Promise<CustomerDto>{
+        const debt = await this.prisma.transaction_payment.aggregate({
+            where: {customer_id: customer.id, type: 'DEBT'}, _sum: {total: true }
+        });
+        const paid = await this.prisma.transaction_payment.aggregate({
+            where: {customer_id: customer.id, type: 'PAID'},
+            _sum: {total: true}
+        });
+        customer.totalDebt = debt._sum.total? 0: paid._sum.total? debt._sum.total: debt._sum.total - paid._sum.total;
+        console.log('ENTRO: '+customer.totalDebt)
+
+        const borrowed = await this.prisma.transaction_container.aggregate({
+            where: {customer_id: customer.id, type: 'BORROWED'}, _sum: {total: true }
+        });
+        const returned = await this.prisma.transaction_container.aggregate({
+            where: {customer_id: customer.id, type: 'RETURNED'},
+            _sum: {total: true}
+        });
+        customer.borrowedContainers = borrowed._sum.total? 0: returned._sum.total? borrowed._sum.total: borrowed._sum.total - returned._sum.total;
+        return customer;
     }
 
 }
