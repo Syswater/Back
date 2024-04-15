@@ -13,6 +13,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesAuthGuard } from './auth/guards/roles-auth.guard';
 import { TriggerService } from './prisma/trigger/trigger.service';
 import { OrderModule } from './order/order.module';
+import { DistributionModule } from './distribution/distribution.module';
 
 @Module({
   imports: [AuthModule,
@@ -25,7 +26,8 @@ import { OrderModule } from './order/order.module';
     PrismaModule,
     RouteModule,
     CustomerModule,
-    OrderModule,],
+    OrderModule,
+    DistributionModule,],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
 })
