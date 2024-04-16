@@ -164,13 +164,16 @@ export class CustomerService {
     }
 
     async validateRouteOrder(current_route_order: number, route_id: number): Promise<number> {
-        const higher = await this.prisma.customer.findMany({ where: { route_id, delete_at: null }, orderBy: { route_order: 'desc' }, take: 1 });
-        if (current_route_order > higher[0].route_order) {
-            return higher[0].route_order + 1;
-        }
-        if (current_route_order < 1) {
-            return 1;
-        }
+        const higher = await this.prisma.customer.findFirst({ where: { route_id, delete_at: null }, orderBy: { route_order: 'desc' }, take: 1 });
+        if (higher) {
+            if (current_route_order > higher.route_order) {
+                return higher.route_order + 1;
+            }
+            if (current_route_order < 1) {
+                return 1;
+            }
+        } else { current_route_order = 1 }
+
         return current_route_order;
     }
 
