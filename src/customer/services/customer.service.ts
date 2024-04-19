@@ -73,7 +73,7 @@ export class CustomerService {
         const route = await this.prisma.route.findFirst({ where: { id: customer.route_id, delete_at: null } })
         if (route) {
             customer.route_order = await this.validateRouteOrder(customer.route_order, route.id);
-            this.updateRouteOrder({current_route_order: customer.route_order});
+            this.updateRouteOrder({current_route_order: customer.route_order, route_id: route.id});
             const newCustomer = await this.prisma.customer.create({
                 data: {
                     ...customer,
@@ -98,7 +98,7 @@ export class CustomerService {
             data: { ...customer, is_contactable: customer.is_contactable === false ? 0 : 1 }
         });
         if(updated_customer.route_order != past_route_order){
-            this.updateRouteOrder({current_route_order:updated_customer.route_order, past_route_order: past_route_order, currentId:id});
+            this.updateRouteOrder({current_route_order:updated_customer.route_order, route_id:updated_customer.route_id, past_route_order: past_route_order, currentId:id});
         }
         return this.getCustomerDto({ customer:updated_customer});
     }
@@ -111,9 +111,9 @@ export class CustomerService {
             const deletedCustomer = await this.prisma.customer.delete({
                 where: { id }
             });
-            const nextCustomer = await this.prisma.customer.findFirst({where:{route_order:deletedCustomer.route_order + 1, delete_at: null}});
+            const nextCustomer = await this.prisma.customer.findFirst({where:{route_order:deletedCustomer.route_order + 1, delete_at: null, route_id:deletedCustomer.route_id}});
             if(nextCustomer){
-                await this.updateRouteOrder({current_route_order:deletedCustomer.route_order, past_route_order:nextCustomer.route_order,currentId:deletedCustomer.id, isDelete:true});
+                await this.updateRouteOrder({current_route_order:deletedCustomer.route_order, route_id: nextCustomer.route_id, past_route_order:nextCustomer.route_order,currentId:deletedCustomer.id, isDelete:true});
             }
 
             return this.getCustomerDto({customer: deletedCustomer});
@@ -132,31 +132,31 @@ export class CustomerService {
         };
     }
 
-    async updateRouteOrder(options: {current_route_order:number, past_route_order?:number, currentId?:number, isDelete?:boolean}){
-        const {current_route_order, past_route_order, currentId, isDelete} = options;
+    async updateRouteOrder(options: {current_route_order:number, route_id:number, past_route_order?:number, currentId?:number, isDelete?:boolean}){
+        const {current_route_order, route_id, past_route_order, currentId, isDelete} = options;
         if(isDelete){
             await this.prisma.customer.updateMany({
-                where: {route_order: {gte: current_route_order}, id:{not: currentId}, delete_at: null},
+                where: {route_order: {gte: current_route_order}, id:{not: currentId}, delete_at: null, route_id},
                 data:{route_order: {decrement: 1}}
             });
             return;
         }
         if(!past_route_order){
             await this.prisma.customer.updateMany({
-                where: { route_order: {gte: current_route_order}, id:{not: currentId}, delete_at: null},
+                where: { route_order: {gte: current_route_order}, id:{not: currentId}, delete_at: null, route_id},
                 data:{route_order: {increment: 1} }
             });
             return;
         }
         if(current_route_order > past_route_order){
             await this.prisma.customer.updateMany({
-                where: {route_order: {lte: current_route_order, gt: past_route_order}, id:{not: currentId}, delete_at: null},
+                where: {route_order: {lte: current_route_order, gt: past_route_order}, id:{not: currentId}, delete_at: null, route_id},
                 data:{ route_order: {decrement: 1}}
             });
             return;
         }
         await this.prisma.customer.updateMany({
-            where: {route_order: {gte: current_route_order, lt: past_route_order}, id:{not: currentId}, delete_at: null},
+            where: {route_order: {gte: current_route_order, lt: past_route_order}, id:{not: currentId}, delete_at: null, route_id},
             data:{route_order: {increment: 1}}
         });
     }

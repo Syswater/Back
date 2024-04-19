@@ -6,7 +6,7 @@ export class ProductTriggersService {
   constructor(private readonly prisma: PrismaService) {
     this.prisma.$use(async (params, next) => {
 
-      if (params.action == 'update') {
+      if (params.action == 'update' && params.model != 'expense_category') {
         params.args.data = {
           ...params.args.data,
           update_at: new Date(),

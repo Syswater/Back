@@ -8,7 +8,7 @@ export class TriggerService {
     prisma.$use(async (params, next): Promise<any> => {
 
 
-      if (params.action == 'update' && params.model != 'note') {
+      if (params.action == 'update' && params.model != 'note' && params.model != 'expense_category') {
         params.args.data = {
           ...params.args.data,
           update_at: new Date(),
