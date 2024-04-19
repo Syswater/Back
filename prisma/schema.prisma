@@ -11,7 +11,7 @@ datasource db {
 model customer {
   id                    Int                      @id @default(autoincrement())
   address               String                   @db.VarChar(100)
-  neighborhood          String                   @db.VarChar(50)
+  neighborhood          String?                  @db.VarChar(50)
   route_order           Int
   tape_preference       customer_tape_preference @default(NORMAL)
   is_contactable        Int                      @db.TinyInt
