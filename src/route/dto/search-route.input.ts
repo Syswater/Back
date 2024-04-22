@@ -1,4 +1,5 @@
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { RouteStatus } from "../../constants/route-status";
 
 export class SearchRouteInput {
     @IsString()
@@ -10,4 +11,7 @@ export class SearchRouteInput {
     @IsNotEmpty()
     @IsOptional()
     whit_status?: boolean | false;
+
+    @IsEnum(RouteStatus)
+    status?: RouteStatus
 }

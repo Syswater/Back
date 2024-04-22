@@ -8,6 +8,7 @@ import { RouteError, RouteErrorCode } from '../exceptions/route-error';
 import { dbHandleError } from '../exceptions/db_handler';
 import { SearchRouteInput } from './dto/search-route.input';
 import { RouteStatus } from '../constants/route-status';
+import { $Enums } from '@prisma/client';
 
 @Injectable()
 export class RouteService {
@@ -15,8 +16,8 @@ export class RouteService {
     constructor(private readonly prisma: PrismaService) { }
 
     async getRoutes(searchInput: SearchRouteInput): Promise<RouteDto[]> {
-        const { filter, whit_status } = searchInput;
-        let where = this.applySearchFilter(filter);
+        const { filter, whit_status, status } = searchInput;
+        let where = await this.applySearchFilter(filter, status);
 
         const routes = await this.prisma.route.findMany({
             select: {
@@ -41,7 +42,7 @@ export class RouteService {
         }));
     }
 
-    private applySearchFilter(filter: string) {
+    private async applySearchFilter(filter: string, status: RouteStatus) {
         let where: {}
         if (filter) {
             where = {
@@ -50,6 +51,31 @@ export class RouteService {
                     { location: { contains: filter } }
                 ]
             };
+        }
+
+        if (status) {
+            const latestStatus = await this.prisma.distribution.groupBy({
+                by: ['route_id'],
+                _max: {
+                    update_at: true
+                }
+            });
+
+            const latestDistributions = await this.prisma.distribution.findMany({
+                where: {
+                    route_id: {
+                        in: latestStatus.map(d => d.route_id)
+                    },
+                    update_at: {
+                        in: latestStatus.map(d => d._max.update_at)
+                    },
+                    status: status as $Enums.distribution_status,
+                }
+            });
+            where = {
+                ...where,
+                id: { in: latestDistributions.map(d => d.route_id) }
+            }
         }
         return where;
     }
