@@ -100,8 +100,12 @@ export class CustomerService {
             where: { id },
             data: { ...customer, is_contactable: customer.is_contactable === false ? 0 : 1 }
         });
-        if(updated_customer.route_order != past_route_order || updated_customer.route_id != past_route_id){
+        if(updated_customer.route_order != past_route_order){
             this.updateRouteOrder({current_route_order:updated_customer.route_order, route_id:updated_customer.route_id, past_route_order: past_route_order, currentId:id});
+        }
+        if(updated_customer.route_id != past_route_id){
+            this.updateRouteOrder({current_route_order:past_route_order, route_id:past_route_id, isDelete:true})
+            this.updateRouteOrder({current_route_order:updated_customer.route_order, route_id:updated_customer.route_id, currentId:id});
         }
         return this.getCustomerDto({ customer: updated_customer });
     }
@@ -118,7 +122,6 @@ export class CustomerService {
             if(nextCustomer){
                 await this.updateRouteOrder({current_route_order:deletedCustomer.route_order, route_id: nextCustomer.route_id, past_route_order:nextCustomer.route_order,currentId:deletedCustomer.id, isDelete:true});
             }
-
             return this.getCustomerDto({ customer: deletedCustomer });
         }
     }
