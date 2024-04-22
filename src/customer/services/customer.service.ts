@@ -92,14 +92,15 @@ export class CustomerService {
         const id: number = customer.id;
         const db_customer = await this.prisma.customer.findFirst({ where: { id } });
         const past_route_order = db_customer.route_order;
+        const past_route_id = db_customer.route_id;
         if (db_customer) {
-            customer.route_order = await this.validateRouteOrder(customer.route_order, db_customer.route_id);
+            customer.route_order = await this.validateRouteOrder(customer.route_order, customer.route_id);
         }
         const updated_customer = await this.prisma.customer.update({
             where: { id },
             data: { ...customer, is_contactable: customer.is_contactable === false ? 0 : 1 }
         });
-        if(updated_customer.route_order != past_route_order){
+        if(updated_customer.route_order != past_route_order || updated_customer.route_id != past_route_id){
             this.updateRouteOrder({current_route_order:updated_customer.route_order, route_id:updated_customer.route_id, past_route_order: past_route_order, currentId:id});
         }
         return this.getCustomerDto({ customer: updated_customer });

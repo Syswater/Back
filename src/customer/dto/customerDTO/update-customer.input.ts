@@ -37,6 +37,11 @@ export class UpdateCustomerInput {
     @IsOptional()
     cellphone?: string;
 
+    @IsOptional()
+    @IsInt({message:'El id de la ruta debe ser un numero entero'})
+    @IsPositive({message: 'El id de la ruta debe ser positivo'})
+    route_id?: number;
+
     @IsBoolean()
     @Equals(true, { message: 'Se debe proporcionar un id' })
     get isValid(): boolean {
