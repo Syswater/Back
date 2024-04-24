@@ -1,5 +1,5 @@
 import { $Enums } from "@prisma/client";
-import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsPositive } from "class-validator";
+import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsPositive, Min } from "class-validator";
 
 export class CreateDistributionInput{
 
@@ -14,7 +14,7 @@ export class CreateDistributionInput{
 
     @IsNotEmpty({message: 'Los contenerdores rotos no puede estar vacio'})
     @IsInt({message: 'Los contenerdores rotos debe ser un entero'})
-    @IsPositive({message:'Los contenerdores rotos debe ser un valor positivo'})
+    @Min(0, {message:'Los contenerdores rotos debe ser un valor positivo'})
     broken_containers: number;
 
 

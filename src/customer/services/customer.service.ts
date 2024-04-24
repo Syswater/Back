@@ -6,13 +6,16 @@ import { CreateCustomerInput } from '../dto/customerDTO/create-customer.input';
 import { UpdateCustomerInput } from '../dto/customerDTO/update-customer.input';
 import { CustomerError, CustomerErrorCode } from 'src/exceptions/customer-error';
 import { NoteDto } from '../dto/noteDTO/note.output';
+import { OrderDto } from 'src/order/dto/order.output';
+import { order } from '@prisma/client';
 
 @Injectable()
 export class CustomerService {
 
     constructor(private readonly prisma: PrismaService) { }
 
-    async getCustomers(filter: string, with_notes: boolean, route_id: number): Promise<CustomerDto[]> {
+    async getCustomers(options: {filter?: string, with_notes?: boolean, with_order?: boolean, distribution_id?: number, route_id?: number}): Promise<CustomerDto[]> {
+        const {filter, with_notes, with_order, distribution_id, route_id} = options;
         let where = {};
         if (filter) {
             where = {
@@ -44,6 +47,7 @@ export class CustomerService {
                 update_at: true,
                 delete_at: true,
                 note: with_notes ? { select: { id: true, description: true, distribution_id: true, customer_id: true } } : undefined,
+                order: with_order ? { where: {distribution_id}, select: {id: true, amount: true, date: true, tape_type: true, customer_id: true, distribution_id:true } }:undefined,
                 transaction_payment: {
                     where: {
                         OR: [
@@ -66,8 +70,8 @@ export class CustomerService {
         });
 
         return customers.map(customer => {
-            const { note, transaction_payment, transaction_container, ...info } = customer;
-            return this.getCustomerDto({ customer: info, note, totalDebt: transaction_payment[0]?.total, borrowedContainers: transaction_container[0]?.total });
+            const { note, order, transaction_payment, transaction_container, ...info } = customer;
+            return this.getCustomerDto({ customer: info, note, order: order, totalDebt: transaction_payment[0]?.total, borrowedContainers: transaction_container[0]?.total });
         });
     }
 
@@ -126,13 +130,14 @@ export class CustomerService {
         }
     }
 
-    private getCustomerDto(values: { customer: Customer, note?: NoteDto[], totalDebt?: number, borrowedContainers?: number }): CustomerDto {
-        const { customer, note, totalDebt, borrowedContainers } = values;
+    private getCustomerDto(values: { customer: Customer, note?: NoteDto[], order?: OrderDto[], totalDebt?: number, borrowedContainers?: number }): CustomerDto {
+        const { customer, note, order, totalDebt, borrowedContainers } = values;
         const { update_at, delete_at, ...info } = customer;
         return {
             ...info,
             is_contactable: customer.is_contactable === 0 ? false : true,
             note,
+            order: order[0],
             totalDebt,
             borrowedContainers
         };

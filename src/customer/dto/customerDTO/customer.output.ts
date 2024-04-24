@@ -1,5 +1,6 @@
 import { customer_tape_preference } from "@prisma/client";
 import { NoteDto } from "../noteDTO/note.output";
+import { OrderDto } from "src/order/dto/order.output";
 
 export class CustomerDto {
     id: number;
@@ -12,6 +13,7 @@ export class CustomerDto {
     cellphone: string | null;
     route_id: number;
     note?: NoteDto[];
+    order?: OrderDto;
     totalDebt?: number;
     borrowedContainers?: number;
 }

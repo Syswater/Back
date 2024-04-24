@@ -1,4 +1,5 @@
 import { $Enums, customer } from "@prisma/client";
+import { OrderDto } from "src/order/dto/order.output";
 
 export class Customer implements customer {
     id: number;

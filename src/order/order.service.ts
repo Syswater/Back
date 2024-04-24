@@ -4,6 +4,7 @@ import { OrderDto } from './dto/order.output';
 import { Order } from './entities/order.entity';
 import { CreateOrderInput } from './dto/create-order.input';
 import { UpdateOrderInput } from './dto/update-order.input';
+import { OrderError, OrderErrorCode } from 'src/exceptions/order-error';
 
 @Injectable()
 export class OrderService {
@@ -22,6 +23,10 @@ export class OrderService {
     async create(order: CreateOrderInput): Promise<OrderDto> {
         await this.prisma.customer.findFirstOrThrow({where:{id:order.customer_id, delete_at: null}});
         await this.prisma.distribution.findFirstOrThrow({where:{id:order.distribution_id, delete_at: null}});
+        const exisitingOrder = this.prisma.order.findFirst({where:{customer_id: order.customer_id, distribution_id: order.distribution_id, delete_at: null}});
+        if(exisitingOrder){
+            throw new OrderError(OrderErrorCode.EXISTING_ORDER, `Ya existe una preventa del cliente con id ${order.customer_id} para la distribución con id ${order.distribution_id}`);
+        }
         const newOrder = await this.prisma.order.create({ data: order });
         return this.getOrderDto(newOrder);
     }

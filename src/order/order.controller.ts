@@ -20,7 +20,7 @@ export class OrderController {
             const newOrder = await this.orderService.create(order);
             return newOrder;
         } catch (error) {
-            throw new BadRequestException("Los datos proporcionados son incorrectos");
+            throw new BadRequestException(error);
         }
     }
 
