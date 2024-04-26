@@ -1,5 +1,5 @@
 import { customer_tape_preference } from "@prisma/client";
-import { IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsPositive, IsString } from "class-validator";
+import { IsBoolean, IsEnum, IsInt, IsNotEmpty, IsNumberString, IsOptional, IsPositive, IsString } from "class-validator";
 
 export class CreateCustomerInput {
 
@@ -24,13 +24,14 @@ export class CreateCustomerInput {
 
     @IsNotEmpty({ message: 'El campo de contacto no puede estar vacia.' })
     @IsBoolean({ message: 'El campo de contacto debe ser boolean' })
+    @IsOptional()
     is_contactable: boolean;
 
     @IsString()
     @IsOptional()
     name?: string;
 
-    @IsString()
+    @IsNumberString()
     @IsOptional()
     cellphone?: string;
 
