@@ -16,6 +16,11 @@ export class CustomerService {
 
     async getCustomers(options: {filter?: string, with_notes?: boolean, with_order?: boolean, distribution_id?: number, route_id?: number}): Promise<CustomerDto[]> {
         const {filter, with_notes, with_order, distribution_id, route_id} = options;
+
+        if(with_order === true && !distribution_id){
+            throw new CustomerError(CustomerErrorCode.DISTRIBUTION_ID_IS_REQUIRED, `Si se desea obtener las preordenes es necesario pasar el id de la distribución`);
+        }
+
         let where = {};
         if (filter) {
             where = {
