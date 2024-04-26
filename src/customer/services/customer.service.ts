@@ -137,7 +137,7 @@ export class CustomerService {
             ...info,
             is_contactable: customer.is_contactable === 0 ? false : true,
             note,
-            order: order[0],
+            order: order? order[0] : undefined,
             totalDebt,
             borrowedContainers
         };
