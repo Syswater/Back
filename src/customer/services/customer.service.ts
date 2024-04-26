@@ -104,14 +104,12 @@ export class CustomerService {
             where: { id },
             data: { ...customer, is_contactable: customer.is_contactable === false ? 0 : 1 }
         });
-        if(updated_customer.route_order != past_route_order){
+        if(updated_customer.route_id === past_route_id && updated_customer.route_order != past_route_order){
             this.updateRouteOrder({current_route_order:updated_customer.route_order, route_id:updated_customer.route_id, past_route_order: past_route_order, currentId:id});
         }
         if(updated_customer.route_id != past_route_id){
             this.updateRouteOrder({current_route_order:past_route_order, route_id:past_route_id, isDelete:true})
-            if(updated_customer.route_order == past_route_order){
-                this.updateRouteOrder({current_route_order:updated_customer.route_order, route_id:updated_customer.route_id, currentId:id});
-            }
+            this.updateRouteOrder({current_route_order:updated_customer.route_order, route_id:updated_customer.route_id, currentId:id});
         }
         return this.getCustomerDto({ customer: updated_customer });
     }
