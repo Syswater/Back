@@ -1,9 +1,9 @@
-import { IsDate, IsDateString, IsInt, IsNotEmpty, IsPositive, IsString } from "class-validator";
+import { IsDate, IsDateString, IsInt, IsNotEmpty, IsPositive, IsString, Min } from "class-validator";
 
 export class CreateOrderInput{
     @IsNotEmpty({message: 'La cantidad no puede estar vacia'})
     @IsInt({message: 'La cantidad debe ser un numero entero'})
-    @IsPositive({message: 'La cantidad debe ser un entero positivo'})
+    @Min(0, {message: 'La cantidad debe ser un entero positivo'})
     amount: number;
 
     @IsDateString({}) // Formato "2024-04-14T12:00:00Z" formato de fecha ISO-8601
