@@ -52,7 +52,7 @@ export class CustomerService {
                 update_at: true,
                 delete_at: true,
                 note: with_notes ? { select: { id: true, description: true, distribution_id: true, customer_id: true } } : undefined,
-                order: with_order ? { where: {distribution_id}, select: {id: true, amount: true, date: true, tape_type: true, customer_id: true, distribution_id:true } }:undefined,
+                order: with_order ? { where: {distribution_id, delete_at: null}, select: {id: true, amount: true, date: true, tape_type: true, customer_id: true, distribution_id:true } }:undefined,
                 transaction_payment: {
                     where: {
                         OR: [
