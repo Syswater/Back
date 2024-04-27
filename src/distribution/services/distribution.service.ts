@@ -9,6 +9,7 @@ import { ChangeStatusDistributionInput } from '../dto/distributionDTO/changeStat
 import { DistributionError, DistributionErrorCode } from 'src/exceptions/distribution-error';
 import { RouteDto } from 'src/route/dto/route.output';
 import { convertWeekdaysToEnum, splitWeekdaysString } from 'src/constants/weekday';
+import { InitDistributionInput } from '../dto/distributionDTO/init-distribution.input';
 
 @Injectable()
 export class DistributionService {
@@ -55,6 +56,15 @@ export class DistributionService {
         const existingDistribution = await this.prisma.distribution.findFirst({where:{route_id, status:{not:$Enums.distribution_status.CLOSED}, delete_at: null}})
         if(existingDistribution) throw new DistributionError(DistributionErrorCode.EXISTING_DISTRIBUTION, `Ya existe una distribución que no esta cerrada para la ruta dada`);
         const newDistribution = await this.prisma.distribution.create({ data: distribution });
+        return this.getDistributionDto(newDistribution);
+    }
+
+    async initDistribution(distribution: InitDistributionInput): Promise<DistributionDto> {
+        const {route_id, date} = distribution;
+        await this.prisma.route.findFirstOrThrow({where:{id:distribution.route_id, delete_at: null}});
+        const existingDistribution = await this.prisma.distribution.findFirst({where:{route_id, status:{not:$Enums.distribution_status.CLOSED}, delete_at: null}})
+        if(existingDistribution) throw new DistributionError(DistributionErrorCode.EXISTING_DISTRIBUTION, `Ya existe una distribución que no esta cerrada para la ruta dada`);
+        const newDistribution = await this.prisma.distribution.create({ data: {date, route_id, broken_containers: 0, load_up: 0, product_inventory_id: 1} });
         return this.getDistributionDto(newDistribution);
     }
 

@@ -6,6 +6,7 @@ import { CreateDistributionInput } from '../dto/distributionDTO/create-distribut
 import { UpdateDistributionInput } from '../dto/distributionDTO/update-distrivution.input';
 import { DeleteDistributionInput } from '../dto/distributionDTO/delete-distribution.input';
 import { ChangeStatusDistributionInput } from '../dto/distributionDTO/changeStatus-distribution.input';
+import { InitDistributionInput } from '../dto/distributionDTO/init-distribution.input';
 
 @Controller('distribution')
 export class DistributionController {
@@ -39,6 +40,16 @@ export class DistributionController {
     async create(@Body() distribution: CreateDistributionInput): Promise<DistributionDto> {
         try {
             const newDistribution = await this.distributionService.create(distribution);
+            return newDistribution;
+        } catch (error) {
+            throw new BadRequestException(error);
+        }
+    }
+
+    @Post('initDistribution')
+    async initDistribution(@Body() distribution: InitDistributionInput): Promise<DistributionDto> {
+        try {
+            const newDistribution = await this.distributionService.initDistribution(distribution);
             return newDistribution;
         } catch (error) {
             throw new BadRequestException(error);
