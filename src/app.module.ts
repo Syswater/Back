@@ -8,10 +8,6 @@ import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
 import { RouteModule } from './route/route.module';
 import { CustomerModule } from './customer/customer.module';
-import { APP_GUARD } from '@nestjs/core';
-import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
-import { RolesAuthGuard } from './auth/guards/roles-auth.guard';
-import { TriggerService } from './prisma/trigger/trigger.service';
 import { OrderModule } from './order/order.module';
 import { DistributionModule } from './distribution/distribution.module';
 

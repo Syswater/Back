@@ -100,11 +100,17 @@ export class RouteService {
 
     async delete(id: number): Promise<RouteDto> {
         try {
-            const route = await this.prisma.route.findFirst({ where: { id, delete_at: null } });
+            const route = await this.prisma.route.findFirst({
+                where: { id, delete_at: null },
+                select: { distribution: { select: { status: true }, orderBy: { update_at: 'desc' }, take: 1 } }
+            });
 
             if (!route) {
                 throw new RouteError(RouteErrorCode.ROUTE_NOT_FOUND, `No se encuentra la ruta con el id ${id}`);
             } else {
+                if (route.distribution[0].status != $Enums.distribution_status.CLOSED) {
+                    throw new RouteError(RouteErrorCode.NON_DELETABLE_ROUTE, `Para eliminar la ruta, esta debe estar cerrada`);
+                }
                 const deletedRoute = await this.prisma.route.delete({
                     where: { id }
                 });
