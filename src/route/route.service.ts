@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateRouteInput } from './dto/create-route.input';
 import { UpdateRouteInput } from './dto/update-route.input copy';
 import { convertWeekdayEnumToString, convertWeekdaysToEnum, splitWeekdaysString } from '../constants/weekday';
@@ -9,6 +8,7 @@ import { dbHandleError } from '../exceptions/db_handler';
 import { SearchRouteInput } from './dto/search-route.input';
 import { RouteStatus } from '../constants/route-status';
 import { $Enums } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class RouteService {
