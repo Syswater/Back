@@ -99,12 +99,13 @@ export class CustomerService {
 
     async update(customer: UpdateCustomerInput): Promise<CustomerDto> {
         const id: number = customer.id;
-        const db_customer = await this.prisma.customer.findFirst({ where: { id } });
+        const db_customer = await this.prisma.customer.findFirst({ where: { id, delete_at: null } });
+        if(!db_customer) throw new CustomerError(CustomerErrorCode.CUSTOMER_NOT_FOUND, `No se encuentra el cliente con el id ${id}`);
+        const route = await this.prisma.route.findFirst({where: {id: customer.route_id, delete_at: null}})
+        if(!route) throw new CustomerError(CustomerErrorCode.CUSTOMER_ROUTE_NOT_FOUND);
         const past_route_order = db_customer.route_order;
         const past_route_id = db_customer.route_id;
-        if (db_customer) {
-            customer.route_order = await this.validateRouteOrder(customer.route_order, customer.route_id);
-        }
+        customer.route_order = await this.validateRouteOrder(customer.route_order, customer.route_id);
         const updated_customer = await this.prisma.customer.update({
             where: { id },
             data: { ...customer, is_contactable: customer.is_contactable === false ? 0 : 1 }

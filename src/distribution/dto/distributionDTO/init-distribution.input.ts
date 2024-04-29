@@ -1,5 +1,4 @@
-import { $Enums } from "@prisma/client";
-import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsPositive, Min } from "class-validator";
+import { IsDateString, IsInt, IsNotEmpty, IsPositive } from "class-validator";
 
 export class InitDistributionInput{
 
