@@ -108,13 +108,13 @@ export class RouteService {
             if (!route) {
                 throw new RouteError(RouteErrorCode.ROUTE_NOT_FOUND, `No se encuentra la ruta con el id ${id}`);
             } else {
-                if (route.distribution[0].status != $Enums.distribution_status.CLOSED) {
+                if (route.distribution[0]?.status && route.distribution[0].status != $Enums.distribution_status.CLOSED) {
                     throw new RouteError(RouteErrorCode.NON_DELETABLE_ROUTE, `Para eliminar la ruta, esta debe estar cerrada`);
                 }
                 const deletedRoute = await this.prisma.route.delete({
                     where: { id }
                 });
-                return this.getRouteDto(deletedRoute)
+                return this.getRouteDto(deletedRoute);
             }
         } catch (e) {
             dbHandleError(e);

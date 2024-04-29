@@ -18,7 +18,11 @@ export class RouteController {
     @Get('findAll')
     async findAll(
         @Query("whit_status") whit_status: string, @Query("filter") filter: string, @Query("status") status: RouteStatus): Promise<RouteDto[]> {
-        return await this.routeService.getRoutes({ whit_status: whit_status?.toLowerCase() === 'true', filter, status });
+        try {
+            return await this.routeService.getRoutes({ whit_status: whit_status?.toLowerCase() === 'true', filter, status });     
+        } catch (error) {
+            throw new BadRequestException(error);
+        }
     }
 
     @Auth(Role.ADMIN)
@@ -28,7 +32,7 @@ export class RouteController {
             const newRoute = await this.routeService.create(route);
             return newRoute;
         } catch (error) {
-            throw new BadRequestException("Los datos proporcionados son incorrectos");
+            throw new BadRequestException(error);
         }
     }
 
@@ -39,7 +43,7 @@ export class RouteController {
             const updatedRoute = await this.routeService.update(route);
             return updatedRoute;
         } catch (error) {
-            throw new BadRequestException("Los datos proporcionados son incorrectos");
+            throw new BadRequestException(error);
         }
     }
 
@@ -47,7 +51,6 @@ export class RouteController {
     @Delete('delete')
     async delete(@Body() params: DeleteRouteDto): Promise<RouteDto> {
         return await this.routeService.delete(params.id);;
-
     }
 
 
