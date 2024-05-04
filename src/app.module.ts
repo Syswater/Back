@@ -10,6 +10,7 @@ import { RouteModule } from './route/route.module';
 import { CustomerModule } from './customer/customer.module';
 import { OrderModule } from './order/order.module';
 import { DistributionModule } from './distribution/distribution.module';
+import { TransactionModule } from './transaction/transaction.module';
 
 @Module({
   imports: [AuthModule,
@@ -23,7 +24,8 @@ import { DistributionModule } from './distribution/distribution.module';
     RouteModule,
     CustomerModule,
     OrderModule,
-    DistributionModule,],
+    DistributionModule,
+    TransactionModule,],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
 })

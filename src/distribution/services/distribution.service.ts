@@ -89,7 +89,7 @@ export class DistributionService {
             await this.prisma.note.deleteMany({where: {distribution_id: updateDistribution.id}})
         }
         return this.getDistributionDto(updateDistribution)
-    } 
+    }
 
     async delete(id: number): Promise<DistributionDto> {
         const distribution = await this.prisma.distribution.findFirstOrThrow({ where: { id, delete_at: null } });
