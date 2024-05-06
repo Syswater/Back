@@ -11,24 +11,26 @@ import { InitDistributionInput } from '../dto/distributionDTO/init-distribution.
 @Controller('distribution')
 export class DistributionController {
 
-    constructor(private readonly distributionService:DistributionService){}
+    constructor(private readonly distributionService: DistributionService) { }
 
     @Get('findAll')
     async findAll(
-        @Query('route_id') route_id?:string,
-        @Query('status') status?:$Enums.distribution_status,
-        @Query('initDate') initDate?:string,
-        @Query('finalDate') finalDate?:string,
-        @Query('with_route') with_route?:string,
-    ):Promise<DistributionDto[]>{
+        @Query('route_id') route_id?: string,
+        @Query('status') status?: $Enums.distribution_status,
+        @Query('initDate') initDate?: string,
+        @Query('finalDate') finalDate?: string,
+        @Query('with_route') with_route?: string,
+        @Query('distributor_id') distributor_id?: string,
+    ): Promise<DistributionDto[]> {
         try {
             return this.distributionService.getDistribution(
                 {
-                    route_id: route_id? parseInt(route_id):undefined,
-                    status: status? status: undefined,
-                    initDate: initDate? new Date(initDate): undefined, // yyyy-mm-dd
-                    finalDate: finalDate? new Date(finalDate): undefined,
-                    with_route: with_route?.toLowerCase() === 'true'
+                    route_id: route_id ? parseInt(route_id) : undefined,
+                    status: status ? status : undefined,
+                    initDate: initDate ? new Date(initDate) : undefined, // yyyy-mm-dd
+                    finalDate: finalDate ? new Date(finalDate) : undefined,
+                    with_route: with_route?.toLowerCase() === 'true',
+                    distributor_id: distributor_id ? parseInt(distributor_id) : undefined,
                 }
             )
         } catch (error) {
