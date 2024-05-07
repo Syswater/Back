@@ -6,5 +6,5 @@ export class SaleDto {
     distribution_id: number;
     user_id: number;
     product_inventory_id: number;
-    sale_paid?: number;
+    value_paid: number;
 }

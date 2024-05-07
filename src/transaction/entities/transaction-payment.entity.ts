@@ -1,7 +1,6 @@
 import { $Enums, transaction_payment } from "@prisma/client";
 
 export class TransactionPayment implements transaction_payment {
-    sale_id: number;
     id: number;
     date: Date;
     value: number;
@@ -10,5 +9,6 @@ export class TransactionPayment implements transaction_payment {
     total: number;
     update_at: Date;
     delete_at: Date;
+    customer_id: number;
     user_id: number;
 }

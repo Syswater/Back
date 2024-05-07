@@ -7,6 +7,6 @@ export class TransactionPaymentDto {
     type: $Enums.transaction_payment_type;
     payment_method: $Enums.transaction_payment_payment_method;
     total: number;
-    sale_id: number;
+    customer_id: number;
     user_id: number;
 }

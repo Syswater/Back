@@ -1,6 +1,6 @@
 import { sale } from "@prisma/client";
 
-export class Sale implements sale{
+export class Sale implements sale {
     id: number;
     amount: number;
     unit_value: number;
@@ -9,5 +9,6 @@ export class Sale implements sale{
     customer_id: number;
     distribution_id: number;
     user_id: number;
+    value_paid: number;
     product_inventory_id: number;
 }

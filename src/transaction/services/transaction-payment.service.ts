@@ -10,8 +10,8 @@ export class TransactionPaymentService {
     constructor(private readonly prisma: PrismaService) { }
 
     async create(transaction: CreateTransactionPayment): Promise<TransactionPaymentDto> {
-        const { sale_id, user_id } = transaction;
-        await this.prisma.sale.findFirstOrThrow({ where: { id: sale_id, delete_at: null } });
+        const { customer_id, user_id } = transaction;
+        await this.prisma.customer.findFirstOrThrow({ where: { id: customer_id, delete_at: null } });
         await this.prisma.user.findFirstOrThrow({ where: { id: user_id, delete_at: null } });
         const newTransaction = await this.prisma.transaction_payment.create({ data: transaction });
         return this.getTransactionPaymentDto(newTransaction);

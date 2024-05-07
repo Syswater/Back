@@ -28,7 +28,7 @@ export class CreateTransactionPayment {
     @IsNotEmpty({ message: 'El id del cliente no puede estar vacio' })
     @IsInt({ message: 'El id del cliente debe ser un numero entero' })
     @IsPositive({ message: 'El id del cliente debe ser positivo' })
-    sale_id: number;
+    customer_id: number;
 
     @IsNotEmpty({ message: 'El id del usuario no puede estar vacio' })
     @IsInt({ message: 'El id del usuario debe ser un numero entero' })

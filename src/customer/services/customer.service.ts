@@ -105,6 +105,11 @@ export class CustomerService {
                     orderBy: { id: 'desc' },
                     take: 1,
                 },
+                transaction_payment: {
+                    select: { total: true },
+                    orderBy: { id: 'desc' },
+                    take: 1,
+                },
                 sale: with_sale
                     ? {
                         where: { distribution_id, delete_at: null },
@@ -116,11 +121,7 @@ export class CustomerService {
                             distribution_id: true,
                             user_id: true,
                             product_inventory_id: true,
-                            transaction_payment: {
-                                select: { total: true },
-                                orderBy: { id: 'desc' },
-                                take: 1,
-                            },
+                            value_paid: true
                         },
                     }
                     : undefined,
@@ -128,31 +129,18 @@ export class CustomerService {
             orderBy: { route_order: 'asc' },
         });
 
-        const result = await Promise.all(
-            customers.map(async (customer) => {
-                const { note, order, sale, transaction_container, ...info } = customer;
-                const saleDto: SaleDto = sale.length > 0
-                    ? {
-                        ...sale[0],
-                        sale_paid: (
-                            await this.prisma.transaction_payment.findFirst({
-                                where: { type: 'SALE', sale_id: sale[0].id },
-                            })
-                        ).value ?? 0
-                    }
-                    : undefined;
-                return this.getCustomerDto({
-                    customer: info,
-                    note,
-                    order: order,
-                    totalDebt: sale ? sale[0]?.transaction_payment[0]?.total ?? 0 : 0,
-                    borrowedContainers: transaction_container[0]?.total ?? 0,
-                    sale: saleDto,
-                });
-            }),
-        );
 
-        return result;
+        return customers.map((customer) => {
+            const { note, order, sale, transaction_container, transaction_payment, ...info } = customer;
+            return this.getCustomerDto({
+                customer: info,
+                note,
+                order: order,
+                totalDebt: transaction_payment[0]?.total ?? 0,
+                borrowedContainers: transaction_container[0]?.total ?? 0,
+                sale: sale.length > 0 ? sale[0] : undefined,
+            });
+        });
     }
 
     async create(customer: CreateCustomerInput): Promise<CustomerDto> {
