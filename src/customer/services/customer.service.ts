@@ -10,6 +10,7 @@ import {
 } from 'src/exceptions/customer-error';
 import { NoteDto } from '../dto/noteDTO/note.output';
 import { OrderDto } from 'src/order/dto/order.output';
+import { SaleDto } from '../../distribution/dto/saleDTO/sale.output';
 
 @Injectable()
 export class CustomerService {
@@ -127,13 +128,14 @@ export class CustomerService {
                 transaction_container,
                 ...info
             } = customer;
+            const saleDto: SaleDto = { ...sale[0], sale_paid: sale[0] ? (await this.prisma.transaction_payment.findFirst({ where: { type: 'SALE', sale_id: sale[0].id } })).value ?? 0 : 0 }
             return this.getCustomerDto({
                 customer: info,
                 note,
                 order: order,
                 totalDebt: sale[0]?.transaction_payment[0]?.total ?? 0,
                 borrowedContainers: transaction_container[0]?.total ?? 0,
-                sale_paid: sale[0] ? (await this.prisma.transaction_payment.findFirst({ where: { type: 'SALE', sale_id: sale[0].id } })).value ?? 0 : 0
+                sale: saleDto ?? undefined
             });
         }));
 
@@ -257,10 +259,10 @@ export class CustomerService {
         note?: NoteDto[];
         order?: OrderDto[];
         totalDebt?: number;
-        sale_paid?: number;
+        sale?: SaleDto;
         borrowedContainers?: number;
     }): CustomerDto {
-        const { customer, note, order, totalDebt, borrowedContainers, sale_paid } = values;
+        const { customer, note, order, totalDebt, borrowedContainers, sale } = values;
         const { update_at, delete_at, ...info } = customer;
         return {
             ...info,
@@ -269,7 +271,7 @@ export class CustomerService {
             order: order ? order[0] : undefined,
             totalDebt,
             borrowedContainers,
-            sale_paid
+            sale
         };
     }
 

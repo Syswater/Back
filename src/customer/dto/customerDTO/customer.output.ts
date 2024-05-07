@@ -1,6 +1,7 @@
 import { customer_tape_preference } from "@prisma/client";
 import { NoteDto } from "../noteDTO/note.output";
 import { OrderDto } from "src/order/dto/order.output";
+import { SaleDto } from "../../../distribution/dto/saleDTO/sale.output";
 
 export class CustomerDto {
     id: number;
@@ -16,5 +17,5 @@ export class CustomerDto {
     order?: OrderDto;
     totalDebt?: number;
     borrowedContainers?: number;
-    sale_paid?: number;
+    sale?: SaleDto;
 }
