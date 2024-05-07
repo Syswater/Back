@@ -6,22 +6,22 @@ import { CreateExpenseCategoryInput } from "../dto/expenseCategoryDTO/create-exp
 import { UpdateExpenseCategoryInput } from "../dto/expenseCategoryDTO/update-expenseCategory";
 
 @Injectable()
-export class ExpenseCategoryService{
+export class ExpenseCategoryService {
     constructor(private readonly prisma: PrismaService) { }
 
     async getExpenseCategories(): Promise<ExpenseCategoryDto[]> {
-        const categories = await this.prisma.expense_category.findMany({where:{}});
+        const categories = await this.prisma.expense_category.findMany({ where: {}, orderBy: { type: "asc" } });
         return categories.map(categorie => this.getExpenseCategoryDto(categorie));
     }
 
     async create(expenseCategory: CreateExpenseCategoryInput): Promise<ExpenseCategoryDto> {
-        const {...info} = expenseCategory;
-        const newCategory = await this.prisma.expense_category.create({ data: {...info}});
+        const { ...info } = expenseCategory;
+        const newCategory = await this.prisma.expense_category.create({ data: { ...info } });
         return this.getExpenseCategoryDto(newCategory);
     }
 
     async update(expenseCategory: UpdateExpenseCategoryInput): Promise<ExpenseCategoryDto> {
-        const {id, ...info} = expenseCategory;
+        const { id, ...info } = expenseCategory;
         const updateCategory = await this.prisma.expense_category.update({
             where: { id },
             data: { ...info }
@@ -37,7 +37,7 @@ export class ExpenseCategoryService{
         return this.getExpenseCategoryDto(deletedCategory);
     }
 
-    private getExpenseCategoryDto(product:ExpenseCategory): ExpenseCategoryDto {
+    private getExpenseCategoryDto(product: ExpenseCategory): ExpenseCategoryDto {
         const { ...info } = product;
         return { ...info };
     }

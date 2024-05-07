@@ -8,4 +8,5 @@ export class UserError extends SsError {
 
 export enum UserErrorCode {
     USER_NOT_FOUND = 'USER_NOT_FOUND',
+    EXISTING_USERNAME = 'EXISTING_USERNAME'
 }

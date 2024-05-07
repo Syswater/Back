@@ -19,4 +19,12 @@ export class User implements user {
         }
         return [];
     }
+
+    static rolesToString(roles: Role[]): string {
+        let rolesString: string = "";
+        roles.forEach(role => {
+            rolesString += Role[role] + ","
+        });
+        return rolesString;
+    }
 }

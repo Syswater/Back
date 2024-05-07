@@ -10,7 +10,7 @@ import { SearchTransactionInput } from '../dto/search-transaction.input';
 @Injectable()
 export class TransactionPaymentService {
 
-    constructor(private readonly prisma:PrismaService){}
+    constructor(private readonly prisma: PrismaService) { }
 
     async findAll(search: SearchTransactionInput): Promise<Pagination<TransactionPaymentDto>>{
         const { customer_id, pageNumber, size } = search;
@@ -25,11 +25,11 @@ export class TransactionPaymentService {
         }
     }
 
-    async create(transaction: CreateTransactionPayment): Promise<TransactionPaymentDto>{
-        const {customer_id, user_id} = transaction;
-        await this.prisma.customer.findFirstOrThrow({where:{id: customer_id, delete_at: null}});
-        await this.prisma.user.findFirstOrThrow({where:{id: user_id, delete_at: null}});
-        const newTransaction = await this.prisma.transaction_payment.create({data: transaction });
+    async create(transaction: CreateTransactionPayment): Promise<TransactionPaymentDto> {
+        const { customer_id, user_id } = transaction;
+        await this.prisma.customer.findFirstOrThrow({ where: { id: customer_id, delete_at: null } });
+        await this.prisma.user.findFirstOrThrow({ where: { id: user_id, delete_at: null } });
+        const newTransaction = await this.prisma.transaction_payment.create({ data: transaction });
         return this.getTransactionPaymentDto(newTransaction);
     }
 

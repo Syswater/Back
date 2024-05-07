@@ -4,6 +4,7 @@ import { ExpenseDto } from "../dto/expenseDTO/expense.output";
 import { Expense } from "../entities/expense.entity";
 import { CreateExpenseInput } from "../dto/expenseDTO/create-expense.input";
 import { UpdateExpenseInput } from "../dto/expenseDTO/update-expense.input";
+import { ExpenseCategory } from "../entities/expense-category.entity";
 
 @Injectable()
 export class ExpenseService{
@@ -24,9 +25,23 @@ export class ExpenseService{
     
         const expenses = await this.prisma.expense.findMany({
             where,
+            select:{
+                id: true,
+                value: true,
+                date: true,
+                description:true,
+                distribution_id: true,
+                expense_category_id:true,
+                update_at: true,
+                delete_at: true,
+                expense_category: true
+            }
         });
     
-        return expenses.map(expense => this.getExpenseDto(expense));
+        return expenses.map(expense => {
+            const { expense_category, ...info } = expense;
+            return this.getExpenseDto( {...info}, expense_category);
+        });
     }
 
     async create(expense: CreateExpenseInput): Promise<ExpenseDto> {
@@ -53,8 +68,8 @@ export class ExpenseService{
         return this.getExpenseDto(deletedExpense);
     }
 
-    private getExpenseDto(expense:Expense): ExpenseDto {
-        const { update_at, delete_at, ...info } = expense;
-        return { ...info };
+    private getExpenseDto(expense:Expense, expense_category?:ExpenseCategory): ExpenseDto {
+        const { update_at, delete_at, expense_category_id, ...info } = expense;
+        return { ...info, expense_category:expense_category.type };
     }
 }

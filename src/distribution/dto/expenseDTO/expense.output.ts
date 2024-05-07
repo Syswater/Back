@@ -4,5 +4,5 @@ export class ExpenseDto{
     date: Date;
     description: string;
     distribution_id: number;
-    expense_category_id: number;
+    expense_category?: string;
 }

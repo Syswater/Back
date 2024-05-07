@@ -1,6 +1,6 @@
 import { $Enums } from "@prisma/client";
 
-export class TransactionPaymentDto{
+export class TransactionPaymentDto {
     id: number;
     date: Date;
     value: number;
