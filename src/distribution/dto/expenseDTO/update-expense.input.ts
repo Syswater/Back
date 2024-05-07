@@ -13,8 +13,9 @@ export class UpdateExpenseInput{
     value?: number;
 
     @IsOptional()
-    @IsDateString()
-    date?: Date;
+    @IsInt({ message: 'El id de la categoria debe ser un numero entero' })
+    @IsPositive({ message: 'El id de la categoria debe ser positivo' })
+    expense_category_id?: number;
 
     @IsOptional()
     @IsString({message:'La descripcion debe ser un string'})
