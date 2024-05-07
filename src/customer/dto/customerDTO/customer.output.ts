@@ -16,4 +16,5 @@ export class CustomerDto {
     order?: OrderDto;
     totalDebt?: number;
     borrowedContainers?: number;
+    sale_paid?: number;
 }
