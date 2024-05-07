@@ -20,8 +20,8 @@ export class ExpenseController{
         try {
             return this.expenseService.getExpenses(
                 {
-                    distribution_id: distribution_id? parseInt(distribution_id):0,
-                    expense_category_id: expense_category_id? parseInt(expense_category_id):0,
+                    distribution_id: distribution_id? parseInt(distribution_id):undefined,
+                    expense_category_id: expense_category_id? parseInt(expense_category_id):undefined,
                     initDate: initDate? new Date(initDate): undefined, // yyyy-mm-dd
                     finalDate: finalDate? new Date(finalDate): undefined
                 }

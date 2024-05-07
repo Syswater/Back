@@ -12,7 +12,7 @@ export class ExpenseService{
     async getExpenses(search: {initDate?:Date, finalDate?:Date, distribution_id?:number, expense_category_id}): Promise<ExpenseDto[]> {
         const { initDate, finalDate, distribution_id, expense_category_id } = search;
         const where = {
-            OR: [
+            AND: [
                 {distribution_id},
                 {expense_category_id},
                 initDate? finalDate? 
