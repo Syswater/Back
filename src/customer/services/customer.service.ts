@@ -138,7 +138,7 @@ export class CustomerService {
                 order: order,
                 totalDebt: transaction_payment[0]?.total ?? 0,
                 borrowedContainers: transaction_container[0]?.total ?? 0,
-                sale: sale.length > 0 ? sale[0] : undefined,
+                sale: sale && sale.length > 0 ? sale[0] : undefined,
             });
         });
     }
@@ -273,7 +273,7 @@ export class CustomerService {
             order: order ? order[0] : undefined,
             totalDebt,
             borrowedContainers,
-            sale,
+            sale: sale ?? undefined,
         };
     }
 
