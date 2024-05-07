@@ -69,7 +69,7 @@ export class ExpenseService{
     }
 
     private getExpenseDto(expense:Expense, expense_category?:ExpenseCategory): ExpenseDto {
-        const { update_at, delete_at, expense_category_id, ...info } = expense;
-        return { ...info, expense_category:expense_category.type };
+        const { update_at, delete_at, ...info } = expense;
+        return { ...info, expense_category:expense_category? expense_category.type :undefined };
     }
 }

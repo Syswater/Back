@@ -34,12 +34,8 @@ export class ExpenseController{
 
     @Post('create')
     async create(@Body() expense: CreateExpenseInput): Promise<ExpenseDto> {
-        try {
-            const newExpense = await this.expenseService.create(expense);
-            return newExpense;
-        } catch (error) {
-            throw new BadRequestException("Los datos proporcionados son incorrectos");
-        }
+        const newExpense = await this.expenseService.create(expense);
+        return newExpense;
     }
 
     @Put('update')
