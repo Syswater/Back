@@ -34,8 +34,12 @@ export class ExpenseController{
 
     @Post('create')
     async create(@Body() expense: CreateExpenseInput): Promise<ExpenseDto> {
-        const newExpense = await this.expenseService.create(expense);
-        return newExpense;
+        try {
+            const newExpense = await this.expenseService.create(expense);
+            return newExpense;
+        } catch (error) {
+            throw new BadRequestException(error);
+        }
     }
 
     @Put('update')
