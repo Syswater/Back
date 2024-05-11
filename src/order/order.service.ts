@@ -8,49 +8,72 @@ import { OrderError, OrderErrorCode } from 'src/exceptions/order-error';
 
 @Injectable()
 export class OrderService {
+  constructor(private readonly prisma: PrismaService) {}
 
-    constructor(private readonly prisma: PrismaService) { }
+  async getOrders(distribution_id: number): Promise<OrderDto[]> {
+    const orders = await this.prisma.order.findMany({
+      where: { distribution_id },
+    });
 
-    async getOrders(distribution_id: number): Promise<OrderDto[]> {
+    return orders.map((order) => this.getOrderDto(order));
+  }
 
-        const orders = await this.prisma.order.findMany({
-            where: {distribution_id}
-        });
-
-        return orders.map(order => this.getOrderDto(order));
+  async create(order: CreateOrderInput): Promise<OrderDto> {
+    await this.prisma.customer.findFirstOrThrow({
+      where: { id: order.customer_id, delete_at: null },
+    });
+    await this.prisma.distribution.findFirstOrThrow({
+      where: { id: order.distribution_id, delete_at: null },
+    });
+    const exisitingOrder = await this.prisma.order.findFirst({
+      where: {
+        customer_id: order.customer_id,
+        distribution_id: order.distribution_id,
+        delete_at: null,
+      },
+    });
+    if (exisitingOrder) {
+      throw new OrderError(
+        OrderErrorCode.EXISTING_ORDER,
+        `Ya existe una preventa del cliente con id ${order.customer_id} para la distribución con id ${order.distribution_id}`,
+      );
     }
+    const newOrder = await this.prisma.order.create({ data: order });
+    await this.updateServed(order.customer_id, order.amount);
+    return this.getOrderDto(newOrder);
+  }
 
-    async create(order: CreateOrderInput): Promise<OrderDto> {
-        await this.prisma.customer.findFirstOrThrow({where:{id:order.customer_id, delete_at: null}});
-        await this.prisma.distribution.findFirstOrThrow({where:{id:order.distribution_id, delete_at: null}});
-        const exisitingOrder = await this.prisma.order.findFirst({where:{customer_id: order.customer_id, distribution_id: order.distribution_id, delete_at: null}});
-        if(exisitingOrder){
-            throw new OrderError(OrderErrorCode.EXISTING_ORDER, `Ya existe una preventa del cliente con id ${order.customer_id} para la distribución con id ${order.distribution_id}`);
-        }
-        const newOrder = await this.prisma.order.create({ data: order });
-        return this.getOrderDto(newOrder);
+  private async updateServed(customer_id: number, amount: number) {
+    if (amount == 0) {
+      await this.prisma.customer.update({
+        where: { id: customer_id },
+        data: { is_served: true },
+      });
     }
+  }
 
-    async update(order: UpdateOrderInput): Promise<OrderDto> {
-        const {id, ...info} = order;
-        const updateOrder = await this.prisma.order.update({
-            where: { id },
-            data: { ...info }
-        })
-        return this.getOrderDto(updateOrder)
-    }
+  async update(order: UpdateOrderInput): Promise<OrderDto> {
+    const { id, ...info } = order;
+    const updateOrder = await this.prisma.order.update({
+      where: { id },
+      data: { ...info },
+    });
+    await this.updateServed(updateOrder.customer_id, updateOrder.amount);
+    return this.getOrderDto(updateOrder);
+  }
 
-    async delete(id: number): Promise<OrderDto> {
-        const order = await this.prisma.order.findFirstOrThrow({ where: { id, delete_at: null } });
-        const deletedOrder = await this.prisma.order.delete({
-            where: { id }
-        });
-        return this.getOrderDto(deletedOrder);
-    }
+  async delete(id: number): Promise<OrderDto> {
+    const order = await this.prisma.order.findFirstOrThrow({
+      where: { id, delete_at: null },
+    });
+    const deletedOrder = await this.prisma.order.delete({
+      where: { id },
+    });
+    return this.getOrderDto(deletedOrder);
+  }
 
-    private getOrderDto(order:Order): OrderDto {
-        const { update_at, delete_at, ...info } = order
-        return { ...info };
-    }
-
+  private getOrderDto(order: Order): OrderDto {
+    const { update_at, delete_at, ...info } = order;
+    return { ...info };
+  }
 }
