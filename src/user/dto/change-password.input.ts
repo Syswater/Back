@@ -1,9 +1,14 @@
-import { IsString, IsStrongPassword } from "class-validator"
+import { IsNotEmpty, IsString, IsStrongPassword } from 'class-validator';
 
-export class ChangePassword {
-    @IsString()
-    oldPassword: string;
+export class ChangePasswordInput {
+  @IsString()
+  @IsNotEmpty()
+  username: string;
 
-    @IsStrongPassword()
-    newPaswword: string;
+  @IsString()
+  @IsNotEmpty()
+  oldPassword: string;
+
+  @IsNotEmpty()
+  newPassword: string;
 }

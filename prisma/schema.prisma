@@ -17,6 +17,7 @@ model customer {
   is_contactable        Int                      @db.TinyInt
   name                  String?                  @db.VarChar(50)
   cellphone             String?                  @db.VarChar(11)
+  is_served             Boolean                  @default(false)
   update_at             DateTime                 @default(now()) @db.Timestamp(0)
   delete_at             DateTime?                @db.Timestamp(0)
   route_id              Int
