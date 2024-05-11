@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsInt, IsPositive, IsDate, IsString, IsBoolean, Equals, IsOptional } from "class-validator";
+import { IsNotEmpty, IsInt, IsPositive, IsDate, IsString, IsBoolean, Equals, IsOptional, Min } from "class-validator";
 
 export class UpdateOrderInput{
 
@@ -9,7 +9,7 @@ export class UpdateOrderInput{
 
     @IsOptional()
     @IsInt({message: 'La cantidad debe ser un numero entero'})
-    @IsPositive({message: 'La cantidad debe ser un entero positivo'})
+    @Min(0, {message: 'La cantidad debe ser mayor o igual a 0'})
     amount?: number;
 
     @IsDate({message: 'La fecha debe ser tener un formaro de fecha valida'})
