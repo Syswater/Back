@@ -86,6 +86,9 @@ export class CustomerService {
                 distribution_id: true,
                 customer_id: true,
               },
+              orderBy: {
+                distribution_id: 'asc'
+              }
             }
           : undefined,
         order: with_order
@@ -158,6 +161,7 @@ export class CustomerService {
       customer.route_order = await this.validateRouteOrder(
         customer.route_order,
         route.id,
+        false
       );
       this.updateRouteOrder({
         current_route_order: customer.route_order,
@@ -195,6 +199,7 @@ export class CustomerService {
     customer.route_order = await this.validateRouteOrder(
       customer.route_order,
       customer.route_id,
+      past_route_id !== customer.route_id
     );
     const updated_customer = await this.prisma.customer.update({
       where: { id },
@@ -348,6 +353,7 @@ export class CustomerService {
   async validateRouteOrder(
     current_route_order: number,
     route_id: number,
+    changeRoute: boolean
   ): Promise<number> {
     const higher = await this.prisma.customer.findFirst({
       where: { route_id, delete_at: null },
@@ -356,7 +362,7 @@ export class CustomerService {
     });
     if (higher) {
       if (current_route_order > higher.route_order) {
-        return higher.route_order + 1;
+        return changeRoute? higher.route_order + 1 : higher.route_order;
       }
       if (current_route_order < 1) {
         return 1;
@@ -364,7 +370,6 @@ export class CustomerService {
     } else {
       current_route_order = 1;
     }
-
     return current_route_order;
   }
 }
