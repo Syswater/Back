@@ -16,14 +16,16 @@ export class SaleController{
         @Query('route_id') route_id?:string,
         @Query('initDate') initDate?:string,
         @Query('finalDate') finalDate?:string,
+        @Query('customer_id') customer_id?:string,
     ):Promise<SaleDto[]>{
         try {
             return this.saleService.getSales(
                 {
-                    distribution_id: distribution_id? parseInt(distribution_id):0,
-                    route_id: route_id? parseInt(route_id):0,
+                    distribution_id: distribution_id? parseInt(distribution_id):undefined,
+                    route_id: route_id? parseInt(route_id):undefined,
                     initDate: initDate? new Date(initDate): undefined, // yyyy-mm-dd
-                    finalDate: finalDate? new Date(finalDate): undefined
+                    finalDate: finalDate? new Date(finalDate): undefined,
+                    customer_id: customer_id? parseInt(customer_id):undefined
                 }
             )
         } catch (error) {

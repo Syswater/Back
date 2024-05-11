@@ -5,6 +5,7 @@ import { TransactionContainerDto } from '../dto/transactionContainerDTO/transact
 import { TransactionContainer } from '../entities/transaction-container.entity';
 import { SearchTransactionInput } from '../dto/search-transaction.input';
 import { Pagination } from 'src/util/pagination/pagination.output';
+import { $Enums, transaction_container } from '@prisma/client';
 
 @Injectable()
 export class TransactionContainerService {
@@ -14,7 +15,7 @@ export class TransactionContainerService {
     async findAll(search: SearchTransactionInput): Promise<Pagination<TransactionContainerDto>>{
         const { customer_id, pageNumber, size } = search;
         await this.prisma.customer.findFirstOrThrow({where: {id: customer_id, delete_at: null}});
-        const transaction_pagination = await this.prisma.transaction_container.findMany({where:{customer_id}, take: size, skip: ((pageNumber-1) * size)});
+        const transaction_pagination = await this.prisma.transaction_container.findMany({where:{customer_id}, take: size, skip: ((pageNumber-1) * size), orderBy: {id: 'desc'}});
         const totalPages = Math.ceil(await this.prisma.transaction_container.count({where:{customer_id}}) / size);
         return {
             currentPage: pageNumber,
@@ -29,7 +30,8 @@ export class TransactionContainerService {
         await this.prisma.customer.findFirstOrThrow({where:{id: customer_id, delete_at: null}});
         await this.prisma.user.findFirstOrThrow({where:{id: user_id, delete_at: null}});
         await this.prisma.product_inventory.findFirstOrThrow({where:{id: product_inventroy_id, delete_at: null} });
-        const newTransaction = await this.prisma.transaction_container.create({data: transaction });
+        const total = await this.calculateTotalContainer(customer_id, transaction.value, transaction.type);
+        const newTransaction = await this.prisma.transaction_container.create({data: {...transaction, total} });
         return this.getTransactionContainerDto(newTransaction);
     }
 
@@ -37,6 +39,33 @@ export class TransactionContainerService {
     private getTransactionContainerDto(transaction:TransactionContainer): TransactionContainerDto {
         const { update_at, delete_at, ...info } = transaction;
         return { ...info };
+    }
+
+    async calculateTotalContainer(customer_id: number, valueAdd: number, typeValue: $Enums.transaction_container_type): Promise<number> {
+        let totalBorrowed = await this.prisma.transaction_container.aggregate({
+            _sum: {
+                value: true
+            },
+            where: {
+                type: $Enums.transaction_container_type.BORROWED,
+                customer_id
+            }
+        });
+        let totalReturned = await this.prisma.transaction_container.aggregate({
+            _sum: {
+                value: true
+            },
+            where: {
+                type: $Enums.transaction_container_type.RETURNED,
+                customer_id
+            }
+        });
+        if(typeValue === $Enums.transaction_container_type.BORROWED){
+            totalBorrowed._sum.value += valueAdd;
+        }else{
+            totalReturned._sum.value += valueAdd;
+        }
+        return totalBorrowed._sum.value - totalReturned._sum.value;
     }
 
 }

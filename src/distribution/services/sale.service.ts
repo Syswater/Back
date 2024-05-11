@@ -10,11 +10,12 @@ export class SaleService{
 
     constructor(private readonly prisma: PrismaService) { }
 
-    async getSales(search: {initDate?:Date, finalDate?:Date, distribution_id?:number, route_id?:number}): Promise<SaleDto[]> {
-        const { initDate, finalDate, distribution_id, route_id } = search;
+    async getSales(search: {initDate?:Date, finalDate?:Date, distribution_id?:number, route_id?:number, customer_id?: number}): Promise<SaleDto[]> {
+        const { initDate, finalDate, distribution_id, route_id, customer_id } = search;
         const where = {
             OR: [
                 {distribution_id},
+                {customer_id},
                 initDate? {
                     distribution: {
                         OR: [

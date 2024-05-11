@@ -16,11 +16,6 @@ export class CreateTransactionContainer{
     @IsEnum($Enums.transaction_container_type)
     type: $Enums.transaction_container_type;
 
-    @IsNotEmpty({message:'El total no puede estar vacio'})
-    @IsInt({message:'El total debe se un entero'})
-    @Min(0, {message:'El total debe ser mayor o igual a cero'})
-    total: number;
-
     @IsNotEmpty({message:'El id del cliente no puede estar vacio'})
     @IsInt({message:'El id del cliente debe ser un numero entero'})
     @IsPositive({message: 'El id del cliente debe ser positivo'})

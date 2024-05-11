@@ -20,11 +20,6 @@ export class CreateTransactionPayment {
     @IsEnum($Enums.transaction_payment_payment_method)
     payment_method: $Enums.transaction_payment_payment_method;
 
-    @IsNotEmpty({ message: 'El total no puede estar vacio' })
-    @IsInt({ message: 'El total debe se un entero' })
-    @Min(0, { message: 'El total debe ser mayor o igual a cero' })
-    total: number;
-
     @IsNotEmpty({ message: 'El id del cliente no puede estar vacio' })
     @IsInt({ message: 'El id del cliente debe ser un numero entero' })
     @IsPositive({ message: 'El id del cliente debe ser positivo' })

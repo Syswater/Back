@@ -6,6 +6,9 @@ import { TransactionPayment } from '../entities/transaction-payment.entity';
 import { PaginationInput } from '../../util/pagination/pagination.input';
 import { Pagination } from '../../util/pagination/pagination.output';
 import { SearchTransactionInput } from '../dto/search-transaction.input';
+import { CustomerDto } from 'src/customer/dto/customerDTO/customer.output';
+import { Customer } from 'src/customer/entities/customer.entity';
+import { $Enums } from '@prisma/client';
 
 @Injectable()
 export class TransactionPaymentService {
@@ -15,7 +18,7 @@ export class TransactionPaymentService {
     async findAll(search: SearchTransactionInput): Promise<Pagination<TransactionPaymentDto>>{
         const { customer_id, pageNumber, size } = search;
         await this.prisma.customer.findFirstOrThrow({where: {id: customer_id, delete_at: null}});
-        const transaction_pagination = await this.prisma.transaction_payment.findMany({where:{customer_id}, take: size, skip: ((pageNumber-1) * size)});
+        const transaction_pagination = await this.prisma.transaction_payment.findMany({where:{customer_id}, take: size, skip: ((pageNumber-1) * size), orderBy: {id: 'desc'}});
         const totalPages = Math.ceil(await this.prisma.transaction_payment.count({where:{customer_id}}) / size);
         return {
             currentPage: pageNumber,
@@ -29,13 +32,44 @@ export class TransactionPaymentService {
         const { customer_id, user_id } = transaction;
         await this.prisma.customer.findFirstOrThrow({ where: { id: customer_id, delete_at: null } });
         await this.prisma.user.findFirstOrThrow({ where: { id: user_id, delete_at: null } });
-        const newTransaction = await this.prisma.transaction_payment.create({ data: transaction });
+        let total = undefined;
+        if(transaction.type !== $Enums.transaction_payment_type.SALE){
+            total = await this.calculateTotalPayment(customer_id, transaction.value, transaction.type);
+        }
+        const newTransaction = await this.prisma.transaction_payment.create({ data: {...transaction, total}, });
         return this.getTransactionPaymentDto(newTransaction);
     }
 
     private getTransactionPaymentDto(transaction:TransactionPayment): TransactionPaymentDto {
         const { update_at, delete_at, ...info } = transaction;
         return { ...info };
+    }
+
+    async calculateTotalPayment(customer_id: number, valueAdd: number, typeValue: $Enums.transaction_payment_type): Promise<number> {
+        let totalDebt = await this.prisma.transaction_payment.aggregate({
+            _sum: {
+                value: true
+            },
+            where: {
+                type: $Enums.transaction_payment_type.DEBT,
+                customer_id
+            }
+        });
+        let totalPaid = await this.prisma.transaction_payment.aggregate({
+            _sum: {
+                value: true
+            },
+            where: {
+                type: $Enums.transaction_payment_type.PAID,
+                customer_id
+            }
+        });
+        if(typeValue === $Enums.transaction_payment_type.DEBT){
+            totalDebt._sum.value += valueAdd;
+        }else{
+            totalPaid._sum.value += valueAdd;
+        }
+        return totalDebt._sum.value - totalPaid._sum.value;
     }
 
 }

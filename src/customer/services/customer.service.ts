@@ -361,35 +361,4 @@ export class CustomerService {
         return current_route_order;
     }
 
-    // async getTotalTransactionValues(customer: CustomerDto): Promise<CustomerDto> {
-    //     const debt = await this.prisma.transaction_payment.aggregate({
-    //         where: { customer_id: customer.id, type: 'DEBT' },
-    //         _sum: { total: true },
-    //     });
-    //     const paid = await this.prisma.transaction_payment.aggregate({
-    //         where: { customer_id: customer.id, type: 'PAID' },
-    //         _sum: { total: true },
-    //     });
-    //     customer.totalDebt = debt._sum.total
-    //         ? 0
-    //         : paid._sum.total
-    //             ? debt._sum.total
-    //             : debt._sum.total - paid._sum.total;
-    //     console.log('ENTRO: ' + customer.totalDebt);
-
-    //     const borrowed = await this.prisma.transaction_container.aggregate({
-    //         where: { customer_id: customer.id, type: 'BORROWED' },
-    //         _sum: { total: true },
-    //     });
-    //     const returned = await this.prisma.transaction_container.aggregate({
-    //         where: { customer_id: customer.id, type: 'RETURNED' },
-    //         _sum: { total: true },
-    //     });
-    //     customer.borrowedContainers = borrowed._sum.total
-    //         ? 0
-    //         : returned._sum.total
-    //             ? borrowed._sum.total
-    //             : borrowed._sum.total - returned._sum.total;
-    //     return customer;
-    // }
 }
