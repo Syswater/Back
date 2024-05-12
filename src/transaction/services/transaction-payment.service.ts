@@ -3,12 +3,10 @@ import { CreateTransactionPayment } from '../dto/transactionPaymentDTO/create-tr
 import { TransactionPaymentDto } from '../dto/transactionPaymentDTO/transaction-payment.output';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TransactionPayment } from '../entities/transaction-payment.entity';
-import { PaginationInput } from '../../util/pagination/pagination.input';
 import { Pagination } from '../../util/pagination/pagination.output';
 import { SearchTransactionInput } from '../dto/search-transaction.input';
-import { CustomerDto } from 'src/customer/dto/customerDTO/customer.output';
-import { Customer } from 'src/customer/entities/customer.entity';
 import { $Enums } from '@prisma/client';
+import { UpdateTransactionPaymentInput } from '../dto/transactionPaymentDTO/update-transaction-payment.input';
 
 @Injectable()
 export class TransactionPaymentService {
@@ -40,6 +38,15 @@ export class TransactionPaymentService {
         return this.getTransactionPaymentDto(newTransaction);
     }
 
+    async update(transaction: UpdateTransactionPaymentInput): Promise<TransactionPaymentDto> {
+        const { id, ...info } = transaction;
+        const updateTransaction = await this.prisma.transaction_payment.update({
+            where: {id},
+            data: {...info}
+        })
+        return this.getTransactionPaymentDto(updateTransaction);
+    }
+
     private getTransactionPaymentDto(transaction:TransactionPayment): TransactionPaymentDto {
         const { update_at, delete_at, ...info } = transaction;
         return { ...info };
@@ -52,6 +59,7 @@ export class TransactionPaymentService {
             },
             where: {
                 type: $Enums.transaction_payment_type.DEBT,
+                delete_at: null,
                 customer_id
             }
         });
@@ -61,6 +69,7 @@ export class TransactionPaymentService {
             },
             where: {
                 type: $Enums.transaction_payment_type.PAID,
+                delete_at: null,
                 customer_id
             }
         });

@@ -11,4 +11,5 @@ export class TransactionPayment implements transaction_payment {
     delete_at: Date;
     customer_id: number;
     user_id: number;
+    sale_id: number | null
 }

@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsInt, IsPositive, IsOptional, IsBoolean, Equals } from "class-validator";
+import { $Enums } from "@prisma/client";
+import { IsNotEmpty, IsInt, IsPositive, IsOptional, IsBoolean, Equals, IsEnum, Min } from "class-validator";
 
 export class UpdateSaleInput{
 
@@ -16,6 +17,15 @@ export class UpdateSaleInput{
     @IsInt({message: 'El valor unitario debe ser un numero entero'})
     @IsPositive({message: 'El valor unitario debe ser un valor positivo'})
     unit_value?: number;
+
+    @IsOptional()
+    @IsInt({message: 'El valor pagado debe ser un numero entero'})
+    @Min(0, {message: 'El valor pagado debe ser un valor positivo'})
+    value_paid: number;
+
+    @IsOptional()
+    @IsEnum($Enums.transaction_payment_payment_method)
+    payment_method: $Enums.transaction_payment_payment_method;
 
     @IsBoolean()
     @Equals(true, { message: 'Se debe proporcionar un id' })

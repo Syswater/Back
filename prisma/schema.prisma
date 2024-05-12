@@ -138,20 +138,21 @@ model route {
 }
 
 model sale {
-  id                   Int               @id @default(autoincrement())
+  id                   Int                   @id @default(autoincrement())
   amount               Int
   unit_value           Int
-  update_at            DateTime          @default(now()) @db.Timestamp(0)
-  delete_at            DateTime?         @db.Timestamp(0)
-  value_paid           Int               @default(0)
+  update_at            DateTime              @default(now()) @db.Timestamp(0)
+  delete_at            DateTime?             @db.Timestamp(0)
+  value_paid           Int                   @default(0)
   customer_id          Int
   distribution_id      Int
   user_id              Int
   product_inventory_id Int
-  customer             customer          @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_CUS_SAL")
-  distribution         distribution      @relation(fields: [distribution_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DIS_SAL")
-  product_inventory    product_inventory @relation(fields: [product_inventory_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_PRO_SAL")
-  user                 user              @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_USE_SAL")
+  customer             customer              @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_CUS_SAL")
+  distribution         distribution          @relation(fields: [distribution_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DIS_SAL")
+  product_inventory    product_inventory     @relation(fields: [product_inventory_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_PRO_SAL")
+  user                 user                  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_USE_SAL")
+  transaction_payment  transaction_payment[]
 
   @@index([customer_id], map: "FK_CUS_SAL_idx")
   @@index([distribution_id], map: "FK_DIS_SAL_idx")
@@ -190,11 +191,14 @@ model transaction_payment {
   delete_at      DateTime?                           @db.Timestamp(0)
   user_id        Int
   customer_id    Int
+  sale_id        Int?
   customer       customer                            @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_CUS_TRA_PA")
+  sale           sale?                               @relation(fields: [sale_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_SAL_TRA_PA")
   user           user                                @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_USE_TRA_PA")
 
   @@index([user_id], map: "FK_USE_TRA_PA_idx")
   @@index([customer_id], map: "FK_CUS_TRA_PA")
+  @@index([sale_id], map: "FK_SAL_TRA_PA")
 }
 
 model user {

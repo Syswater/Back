@@ -14,6 +14,7 @@ import { ExpenseCategoryController } from './controllers/expense-category.contro
 import { ExpenseController } from './controllers/expense.controller';
 import { ProductInventoryController } from './controllers/product-inventory.controller';
 import { SaleController } from './controllers/sale.controller';
+import { TransactionPaymentService } from 'src/transaction/services/transaction-payment.service';
 
 @Module({
   providers: [
@@ -26,7 +27,8 @@ import { SaleController } from './controllers/sale.controller';
     DistributionTriggersService,
     ExpenseTriggersService,
     ProductTriggersService,
-    SaleTriggersService
+    SaleTriggersService,
+    TransactionPaymentService
   ],
   controllers: [
     DistributionController,

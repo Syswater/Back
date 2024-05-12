@@ -36,12 +36,12 @@ export class SaleController{
 
     @Post('create')
     async create(@Body() sale: CreateSaleInput): Promise<SaleDto> {
-        try {
+        // try {
             const newSale = await this.saleService.create(sale);
             return newSale;
-        } catch (error) {
-            throw new BadRequestException("Los datos proporcionados son incorrectos");
-        }
+        // } catch (error) {
+        //     throw new BadRequestException("Los datos proporcionados son incorrectos");
+        // }
     }
 
     @Put('update')

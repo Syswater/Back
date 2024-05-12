@@ -9,4 +9,5 @@ export class TransactionPaymentDto {
     total: number;
     customer_id: number;
     user_id: number;
+    sale_id?: number;
 }
