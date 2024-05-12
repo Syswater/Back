@@ -1,5 +1,6 @@
 export class SaleDto {
     id: number;
+    date: Date;
     amount: number;
     unit_value: number;
     customer_id: number;

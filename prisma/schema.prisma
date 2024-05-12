@@ -139,6 +139,7 @@ model route {
 
 model sale {
   id                   Int                   @id @default(autoincrement())
+  date                 DateTime              @db.Date
   amount               Int
   unit_value           Int
   update_at            DateTime              @default(now()) @db.Timestamp(0)

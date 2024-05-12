@@ -16,7 +16,7 @@ export class TransactionPaymentService {
     async findAll(search: SearchTransactionInput): Promise<Pagination<TransactionPaymentDto>>{
         const { customer_id, pageNumber, size } = search;
         await this.prisma.customer.findFirstOrThrow({where: {id: customer_id, delete_at: null}});
-        const transaction_pagination = await this.prisma.transaction_payment.findMany({where:{customer_id}, take: size, skip: ((pageNumber-1) * size), orderBy: {id: 'desc'}});
+        const transaction_pagination = await this.prisma.transaction_payment.findMany({where:{customer_id, OR: [{type: $Enums.transaction_payment_type.DEBT}, {type: $Enums.transaction_payment_type.PAID}]}, take: size, skip: ((pageNumber-1) * size), orderBy: {id: 'desc'}});
         const totalPages = Math.ceil(await this.prisma.transaction_payment.count({where:{customer_id}}) / size);
         return {
             currentPage: pageNumber,

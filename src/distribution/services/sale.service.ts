@@ -51,7 +51,8 @@ export class SaleService{
         await this.prisma.distribution.findFirstOrThrow({where:{id:sale.distribution_id, delete_at: null}});
         await this.prisma.user.findFirstOrThrow({where:{id:sale.user_id, delete_at: null}});
         await this.prisma.product_inventory.findFirstOrThrow({where:{id:sale.product_inventory_id, delete_at: null}});
-        const newSale = await this.prisma.sale.create({ data: {...info} });
+        const date = moment().startOf('day').toDate();
+        const newSale = await this.prisma.sale.create({ data: {...info, date} });
         await this.updateTransactionsPayment({value: sale.amount * sale.unit_value, value_paid: sale.value_paid, payment_method: sale.payment_method, customer_id: sale.customer_id, user_id: sale.user_id, sale_id: newSale.id});
         return this.getSaleDto(newSale);
     }

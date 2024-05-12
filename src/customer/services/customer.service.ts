@@ -119,6 +119,7 @@ export class CustomerService {
               where: { distribution_id, delete_at: null },
               select: {
                 id: true,
+                date: true,
                 amount: true,
                 unit_value: true,
                 customer_id: true,
