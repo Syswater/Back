@@ -37,6 +37,9 @@ export class SaleService{
     
         const sales = await this.prisma.sale.findMany({
             where,
+            orderBy: {
+                id: 'desc'
+            }
         });
     
         return sales.map(sale => this.getSaleDto(sale));
