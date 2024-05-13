@@ -6,6 +6,7 @@ import { TransactionContainer } from '../entities/transaction-container.entity';
 import { SearchTransactionInput } from '../dto/search-transaction.input';
 import { Pagination } from 'src/util/pagination/pagination.output';
 import { $Enums, transaction_container } from '@prisma/client';
+import { TransactionError, TransactionErrorCode } from 'src/exceptions/transaction-error';
 
 @Injectable()
 export class TransactionContainerService {
@@ -30,6 +31,9 @@ export class TransactionContainerService {
         await this.prisma.customer.findFirstOrThrow({where:{id: customer_id, delete_at: null}});
         await this.prisma.user.findFirstOrThrow({where:{id: user_id, delete_at: null}});
         await this.prisma.product_inventory.findFirstOrThrow({where:{id: product_inventroy_id, delete_at: null} });
+        if(transaction.type === $Enums.transaction_container_type.RETURNED && await this.getTotalBorrowed(customer_id) - transaction.value < 0){
+            throw new TransactionError(TransactionErrorCode.CONTAINERS_EXCEED_BORROWED, `El valor de la transaccion excede del total de contenedores prestados para el cliente con id ${customer_id}`);
+        }
         const total = await this.calculateTotalContainer(customer_id, transaction.value, transaction.type);
         const newTransaction = await this.prisma.transaction_container.create({data: {...transaction, total} });
         return this.getTransactionContainerDto(newTransaction);
@@ -66,6 +70,19 @@ export class TransactionContainerService {
             totalReturned._sum.value += valueAdd;
         }
         return totalBorrowed._sum.value - totalReturned._sum.value;
+    }
+
+    async getTotalBorrowed(customer_id: number): Promise<number>{
+        let totalBorrowed = await this.prisma.transaction_container.aggregate({
+            _sum: {
+                value: true
+            },
+            where: {
+                type: $Enums.transaction_container_type.BORROWED,
+                customer_id
+            }
+        });
+        return totalBorrowed._sum.value;
     }
 
 }

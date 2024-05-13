@@ -58,13 +58,13 @@ export class SaleService{
     }
 
     async update(sale: UpdateSaleInput): Promise<SaleDto> {
-        const {id, ...info} = sale;
+        const {id, payment_method, ...info} = sale;
         await this.prisma.sale.findFirstOrThrow({ where: { id, delete_at: null } });
         const updateSale = await this.prisma.sale.update({
             where: { id },
             data: { ...info }
         })
-        await this.updateTransactionsPayment({value: updateSale.amount * updateSale.unit_value, value_paid: updateSale.value_paid, payment_method: sale.payment_method, customer_id: updateSale.customer_id, user_id: updateSale.user_id, sale_id: updateSale.id});
+        await this.updateTransactionsPayment({value: updateSale.amount * updateSale.unit_value, value_paid: updateSale.value_paid, payment_method: payment_method, customer_id: updateSale.customer_id, user_id: updateSale.user_id, sale_id: updateSale.id});
         return this.getSaleDto(updateSale);
     }
 

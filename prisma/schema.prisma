@@ -233,15 +233,16 @@ enum customer_tape_preference {
   SERVIFACIL
 }
 
-enum transaction_payment_payment_method {
-  EFECTIVO
-  NEQUI
-  DAVIPLATA
-}
-
 enum distribution_status {
   PREORDER
   OPENED
   CLOSE_REQUEST
   CLOSED
+}
+
+enum transaction_payment_payment_method {
+  EFECTIVO
+  NEQUI
+  DAVIPLATA
+  BANCOLOMBIA
 }

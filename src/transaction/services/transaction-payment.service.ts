@@ -7,6 +7,7 @@ import { Pagination } from '../../util/pagination/pagination.output';
 import { SearchTransactionInput } from '../dto/search-transaction.input';
 import { $Enums } from '@prisma/client';
 import { UpdateTransactionPaymentInput } from '../dto/transactionPaymentDTO/update-transaction-payment.input';
+import { TransactionError, TransactionErrorCode } from 'src/exceptions/transaction-error';
 
 @Injectable()
 export class TransactionPaymentService {
@@ -30,6 +31,9 @@ export class TransactionPaymentService {
         const { customer_id, user_id } = transaction;
         await this.prisma.customer.findFirstOrThrow({ where: { id: customer_id, delete_at: null } });
         await this.prisma.user.findFirstOrThrow({ where: { id: user_id, delete_at: null } });
+        if( transaction.type === $Enums.transaction_payment_type.PAID && await this.getTotalDebt(customer_id) - transaction.value < 0){
+            throw new TransactionError(TransactionErrorCode.PAYMENT_EXCEEDS_DEBT, `El valor de la transaccion excede la deuda total del cliente con id ${customer_id}`);
+        }
         let total = undefined;
         if(transaction.type !== $Enums.transaction_payment_type.SALE){
             total = await this.calculateTotalPayment(customer_id, transaction.value, transaction.type);
@@ -79,6 +83,20 @@ export class TransactionPaymentService {
             totalPaid._sum.value += valueAdd;
         }
         return totalDebt._sum.value - totalPaid._sum.value;
+    }
+
+    async getTotalDebt(customer_id: number): Promise<number>{
+        let totalDebt = await this.prisma.transaction_payment.aggregate({
+            _sum: {
+                value: true
+            },
+            where: {
+                type: $Enums.transaction_payment_type.DEBT,
+                delete_at: null,
+                customer_id
+            }
+        });
+        return totalDebt._sum.value;
     }
 
 }
