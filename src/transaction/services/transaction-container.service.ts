@@ -73,16 +73,8 @@ export class TransactionContainerService {
     }
 
     async getTotalBorrowed(customer_id: number): Promise<number>{
-        let totalBorrowed = await this.prisma.transaction_container.aggregate({
-            _sum: {
-                value: true
-            },
-            where: {
-                type: $Enums.transaction_container_type.BORROWED,
-                customer_id
-            }
-        });
-        return totalBorrowed._sum.value;
+        const totalBorrowed = await this.prisma.transaction_container.findFirst({where: {customer_id}, orderBy: {id: 'desc'}, take: 1});
+        return totalBorrowed.total;
     }
 
 }

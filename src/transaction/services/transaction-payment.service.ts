@@ -86,17 +86,8 @@ export class TransactionPaymentService {
     }
 
     async getTotalDebt(customer_id: number): Promise<number>{
-        let totalDebt = await this.prisma.transaction_payment.aggregate({
-            _sum: {
-                value: true
-            },
-            where: {
-                type: $Enums.transaction_payment_type.DEBT,
-                delete_at: null,
-                customer_id
-            }
-        });
-        return totalDebt._sum.value;
+        const totalDebt = await this.prisma.transaction_payment.findFirst({where: {customer_id, OR: [{type: $Enums.transaction_payment_type.DEBT}, {type: $Enums.transaction_payment_type.PAID}]}, orderBy: {id: 'desc'}, take: 1});
+        return totalDebt.total;
     }
 
 }
