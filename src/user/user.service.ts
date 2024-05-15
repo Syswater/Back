@@ -145,4 +145,11 @@ export class UserService {
 
     return true;
   }
+
+  async findDistributionUsers(distribution_id: number): Promise<UserDto[]> {
+    const users = await this.prisma.user.findMany({
+      where: { distribution_user: { some: { distribution_id } } },
+    });
+    return users.map((user) => this.toDto(user));
+  }
 }

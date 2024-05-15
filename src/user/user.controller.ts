@@ -24,7 +24,24 @@ export class UserController {
   @Get('findAll')
   async findAll(@Query('filter') filter: string) {
     try {
-      return this.userService.findAll({ filter });
+      return await this.userService.findAll({ filter });
+    } catch (error) {
+      throw new BadRequestException(
+        'Los datos proporcionados son incorrectos',
+        error,
+      );
+    }
+  }
+
+  @Auth(Role.ADMIN, Role.DISTRIBUTOR, Role.ADMIN)
+  @Get('getDistributionUsers')
+  async findgetDistributionUsers(
+    @Query('distribution_id') distribution_id: string,
+  ) {
+    try {
+      return await this.userService.findDistributionUsers(
+        parseInt(distribution_id),
+      );
     } catch (error) {
       throw new BadRequestException(
         'Los datos proporcionados son incorrectos',
