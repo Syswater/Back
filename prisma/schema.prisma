@@ -127,7 +127,7 @@ model product_inventory {
 
 model route {
   id           Int            @id @default(autoincrement())
-  name         String         @db.VarChar(30)
+  name         String         @unique(map: "ROUTE_UK") @db.VarChar(30)
   location     String         @db.VarChar(20)
   weekdays     String         @db.VarChar(100)
   price        Int
