@@ -11,6 +11,8 @@ import {
 import { NoteDto } from '../dto/noteDTO/note.output';
 import { OrderDto } from 'src/order/dto/order.output';
 import { SaleDto } from '../../distribution/dto/saleDTO/sale.output';
+import * as xlsx from 'xlsx';
+import { ExcelRow } from '../dto/customerDTO/create-many-customers.input';
 
 @Injectable()
 export class CustomerService {
@@ -87,8 +89,8 @@ export class CustomerService {
                 customer_id: true,
               },
               orderBy: {
-                distribution_id: 'asc'
-              }
+                distribution_id: 'asc',
+              },
             }
           : undefined,
         order: with_order
@@ -149,7 +151,10 @@ export class CustomerService {
         order: order,
         totalDebt: transaction_payment[0]?.total ?? 0,
         borrowedContainers: transaction_container[0]?.total ?? 0,
-        sale: sale && sale.length > 0 ? sale[0] : undefined,
+        sale:
+          sale && sale.length > 0
+            ? { ...sale[0], user_name: info.name }
+            : undefined,
       });
     });
   }
@@ -162,7 +167,7 @@ export class CustomerService {
       customer.route_order = await this.validateRouteOrder(
         customer.route_order,
         route.id,
-        false
+        false,
       );
       this.updateRouteOrder({
         current_route_order: customer.route_order,
@@ -200,7 +205,7 @@ export class CustomerService {
     customer.route_order = await this.validateRouteOrder(
       customer.route_order,
       customer.route_id,
-      past_route_id !== customer.route_id
+      past_route_id !== customer.route_id,
     );
     const updated_customer = await this.prisma.customer.update({
       where: { id },
@@ -354,7 +359,7 @@ export class CustomerService {
   async validateRouteOrder(
     current_route_order: number,
     route_id: number,
-    changeRoute: boolean
+    changeRoute: boolean,
   ): Promise<number> {
     const higher = await this.prisma.customer.findFirst({
       where: { route_id, delete_at: null },
@@ -363,7 +368,7 @@ export class CustomerService {
     });
     if (higher) {
       if (current_route_order > higher.route_order) {
-        return changeRoute? higher.route_order + 1 : higher.route_order;
+        return changeRoute ? higher.route_order + 1 : higher.route_order;
       }
       if (current_route_order < 1) {
         return 1;
@@ -372,5 +377,61 @@ export class CustomerService {
       current_route_order = 1;
     }
     return current_route_order;
+  }
+
+  async createMany(file: Express.Multer.File) {
+    const workbook = xlsx.read(file.buffer, { type: 'buffer' });
+    const routeNames = workbook.SheetNames;
+
+    for (const route of routeNames) {
+      const sheet = workbook.Sheets[route];
+      const data: ExcelRow[] = xlsx.utils.sheet_to_json(sheet);
+      for (const row of data) {
+        const {
+          address,
+          containers,
+          debit,
+          route_order,
+          tape_preference,
+          cellphone,
+          name,
+          neighborhood,
+          note,
+          product_inventroy_id,
+        } = row;
+        await this.prisma.customer.create({
+          data: {
+            address,
+            is_contactable: 1,
+            route_order,
+            cellphone,
+            name,
+            neighborhood,
+            tape_preference,
+            route: { connect: { name: route } },
+            note: { create: { description: note } },
+            transaction_container: {
+              create: {
+                date: new Date(),
+                total: containers,
+                value: containers,
+                type: 'BORROWED',
+                user_id: 10,
+                product_inventroy_id,
+              },
+            },
+            transaction_payment: {
+              create: {
+                date: new Date(),
+                total: debit,
+                value: debit,
+                type: 'DEBT',
+                user_id: 10,
+              },
+            },
+          },
+        });
+      }
+    }
   }
 }
