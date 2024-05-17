@@ -13,6 +13,8 @@ import { OrderDto } from 'src/order/dto/order.output';
 import { SaleDto } from '../../distribution/dto/saleDTO/sale.output';
 import * as xlsx from 'xlsx';
 import { ExcelRow } from '../dto/customerDTO/create-many-customers.input';
+import { DefaultArgs } from '@prisma/client/runtime/library';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class CustomerService {
@@ -379,59 +381,92 @@ export class CustomerService {
     return current_route_order;
   }
 
-  async createMany(file: Express.Multer.File) {
+  async createMany(file: Express.Multer.File, sheet_number: number) {
     const workbook = xlsx.read(file.buffer, { type: 'buffer' });
-    const routeNames = workbook.SheetNames;
+    const sheetName = workbook.SheetNames[sheet_number];
+    const sheet = workbook.Sheets[sheetName];
 
-    for (const route of routeNames) {
-      const sheet = workbook.Sheets[route];
-      const data: ExcelRow[] = xlsx.utils.sheet_to_json(sheet);
-      for (const row of data) {
-        const {
-          address,
-          containers,
-          debit,
-          route_order,
-          tape_preference,
-          cellphone,
-          name,
-          neighborhood,
-          note,
-          product_inventroy_id,
-        } = row;
-        await this.prisma.customer.create({
-          data: {
-            address,
-            is_contactable: 1,
-            route_order,
-            cellphone,
-            name,
-            neighborhood,
-            tape_preference,
-            route: { connect: { name: route } },
-            note: { create: { description: note } },
-            transaction_container: {
-              create: {
-                date: new Date(),
-                total: containers,
-                value: containers,
-                type: 'BORROWED',
-                user_id: 10,
-                product_inventroy_id,
-              },
-            },
-            transaction_payment: {
-              create: {
-                date: new Date(),
-                total: debit,
-                value: debit,
-                type: 'DEBT',
-                user_id: 10,
-              },
-            },
-          },
-        });
-      }
+    const data: ExcelRow[] = xlsx.utils.sheet_to_json(sheet);
+    const created: Promise<any>[] = [];
+    created.push(this.createRouteUsers(data, created, sheetName));
+    await Promise.all(created);
+  }
+
+  private async createRouteUsers(
+    data: ExcelRow[],
+    created: Promise<any>[],
+    route: string,
+  ) {
+    for (const row of data) {
+      await this.prisma.$transaction(
+        async (tx) => {
+          return this.proccessCreateUser(row, route, tx);
+        },
+        {
+          maxWait: 300000,
+          timeout: 500000,
+        },
+      );
     }
+  }
+
+  private async proccessCreateUser(
+    row: ExcelRow,
+    route: string,
+    tx: Omit<
+      PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>,
+      '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+    >,
+  ) {
+    const {
+      address,
+      containers,
+      debit,
+      route_order,
+      tape_preference,
+      cellphone,
+      name,
+      neighborhood,
+      note,
+      product_inventroy_id,
+    } = row;
+    return tx.customer.create({
+      data: {
+        address,
+        is_contactable: 1,
+        route_order,
+        cellphone,
+        name,
+        neighborhood,
+        tape_preference,
+        route: { connect: { name: route } },
+        note: note ? { create: { description: note } } : undefined,
+        transaction_container:
+          containers > 0
+            ? {
+                create: {
+                  date: new Date(),
+                  total: containers,
+                  value: containers,
+                  type: 'BORROWED',
+                  user_id: 10,
+                  product_inventroy_id,
+                },
+              }
+            : undefined,
+        transaction_payment:
+          debit > 0
+            ? {
+                create: {
+                  date: new Date(),
+                  total: debit,
+                  value: debit,
+                  type: 'DEBT',
+                  user_id: 10,
+                },
+              }
+            : undefined,
+      },
+    });
   }
 }

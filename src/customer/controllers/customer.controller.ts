@@ -18,6 +18,7 @@ import { DeleteCustomerInput } from '../dto/customerDTO/delete-customer.input';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Multer } from 'multer';
+import { query } from 'express';
 
 @Auth()
 @Controller('customer')
@@ -55,12 +56,20 @@ export class CustomerController {
 
   @Post('create-many')
   @UseInterceptors(FileInterceptor('file'))
-  async createMany(@UploadedFile() file: Express.Multer.File) {
+  async createMany(
+    @UploadedFile() file: Express.Multer.File,
+    @Query('sheetNumber') sheetNumber: string,
+  ) {
     if (!file) {
       throw new Error('No se ha proporcionado ningún archivo.');
     }
 
-    await this.customerService.createMany(file);
+    const sheetNumberParsed = parseInt(sheetNumber);
+    if (isNaN(sheetNumberParsed)) {
+      throw new Error('El número de hoja proporcionado no es válido.');
+    }
+
+    await this.customerService.createMany(file, sheetNumberParsed - 1);
 
     return { message: 'Archivo Excel cargado y procesado correctamente.' };
   }
