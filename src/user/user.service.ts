@@ -61,7 +61,7 @@ export class UserService {
   }
 
   public async findAll(input: SearchUserInput): Promise<UserDto[]> {
-    const { filter } = input;
+    const { filter, role } = input;
     let where = {};
     if (filter) {
       where = {
@@ -72,7 +72,16 @@ export class UserService {
         ],
       };
     }
-    const users = await this.prisma.user.findMany({ where });
+
+    if (role) {
+      where = {
+        ...where,
+        AND: [{ roles: { contains: role } }],
+      };
+    }
+    const users = await this.prisma.user.findMany({
+      where,
+    });
     return users.map((user) => this.toDto(user));
   }
 

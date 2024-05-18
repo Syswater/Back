@@ -15,6 +15,7 @@ import { Role } from '../constants/role';
 import { DeleteUserInput } from './dto/delete_user.input';
 import { UpdateUserInput } from './dto/update_user.input';
 import { ChangePasswordInput } from './dto/change-password.input';
+import { $Enums } from '@prisma/client';
 
 @Controller('users')
 export class UserController {
@@ -22,9 +23,9 @@ export class UserController {
 
   @Auth(Role.ADMIN)
   @Get('findAll')
-  async findAll(@Query('filter') filter: string) {
+  async findAll(@Query('filter') filter: string, @Query('role') role: string) {
     try {
-      return await this.userService.findAll({ filter });
+      return await this.userService.findAll({ filter, role });
     } catch (error) {
       throw new BadRequestException(
         'Los datos proporcionados son incorrectos',
