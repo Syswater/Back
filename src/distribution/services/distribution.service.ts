@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { DistributionDto } from '../dto/distributionDTO/distribution.output';
-import { $Enums, distribution, route } from '@prisma/client';
+import { $Enums } from '@prisma/client';
 import { Distribution } from '../entities/distribution.entity';
 import { CreateDistributionInput } from '../dto/distributionDTO/create-distribution.input';
 import { UpdateDistributionInput } from '../dto/distributionDTO/update-distrivution.input';
@@ -17,6 +17,7 @@ import {
 } from 'src/constants/weekday';
 import { InitDistributionInput } from '../dto/distributionDTO/init-distribution.input';
 import { SaleService } from './sale.service';
+import { DistributionReport } from '../dto/distributionDTO/distribution-report.output';
 
 @Injectable()
 export class DistributionService {
@@ -28,7 +29,7 @@ export class DistributionService {
   async getDistribution(search: {
     initDate?: Date;
     finalDate?: Date;
-    status?: $Enums.distribution_status;
+    status?: $Enums.distribution_status[];
     route_id?: number;
     with_route?: boolean;
     distributor_id?: number;
@@ -44,7 +45,7 @@ export class DistributionService {
     let where = {};
     if (initDate || route_id || status) {
       where = {
-        status,
+        status: { in: status },
         route_id,
         date: initDate
           ? finalDate
@@ -238,7 +239,15 @@ export class DistributionService {
     return { ...info, route };
   }
 
-  async getReport(id: number) {
-    return this.saleService.getSaleReportByDistribution(id);
+  async getReport(id: number): Promise<DistributionReport> {
+    const saleReport = await this.saleService.getSaleReportByDistribution(id);
+
+    return {
+      saleReport,
+      expenseReport: undefined,
+      balance: undefined,
+      containerReport: undefined,
+      load: undefined,
+    };
   }
 }

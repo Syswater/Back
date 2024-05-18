@@ -7,6 +7,7 @@ import { UpdateSaleInput } from '../dto/saleDTO/update-sale.input';
 import { TransactionPaymentService } from 'src/transaction/services/transaction-payment.service';
 import * as moment from 'moment';
 import { $Enums } from '@prisma/client';
+import { SaleReport } from '../dto/saleDTO/sale-report.output';
 
 @Injectable()
 export class SaleService {
@@ -183,11 +184,32 @@ export class SaleService {
     }
   }
 
-  async getSaleReportByDistribution(distribution_id: number) {
-    return await this.prisma.transaction_payment.groupBy({
-      by: ['payment_method'],
+  async getSaleReportByDistribution(
+    distribution_id: number,
+  ): Promise<SaleReport> {
+    const report = await this.prisma.transaction_payment.groupBy({
+      by: ['payment_method', 'date'],
       _sum: { value: true },
       where: { sale: { distribution_id } },
     });
+
+    const per_method = report.map((item) => {
+      return {
+        method: item.payment_method,
+        value: item._sum.value,
+        date: moment(item.date).format('DD/MM/YYYY'),
+      };
+    });
+
+    const total = per_method.reduce((a, b) => (a + b.method ? b.value : 0), 0);
+
+    const quantitySold = (
+      await this.prisma.sale.aggregate({
+        _sum: { amount: true },
+        where: { distribution_id },
+      })
+    )._sum.amount;
+
+    return { total, per_method, quantitySold, debt: 0 };
   }
 }

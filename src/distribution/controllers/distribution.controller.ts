@@ -25,16 +25,28 @@ export class DistributionController {
   @Get('findAll')
   async findAll(
     @Query('route_id') route_id?: string,
-    @Query('status') status?: $Enums.distribution_status,
+    @Query('status') status?: string,
     @Query('initDate') initDate?: string,
     @Query('finalDate') finalDate?: string,
     @Query('with_route') with_route?: string,
     @Query('distributor_id') distributor_id?: string,
   ): Promise<DistributionDto[]> {
     try {
+      const inputStatus: $Enums.distribution_status[] = [];
+      for (let stat of status ? status.split(',') : []) {
+        stat = stat.trim();
+        if (!$Enums.distribution_status[stat.replace(/\s+/g, '')]) {
+          throw new BadRequestException(
+            'Los datos proporcionados son incorrectos',
+          );
+        }
+        if ($Enums.distribution_status[stat])
+          inputStatus.push(stat as $Enums.distribution_status);
+      }
+
       return this.distributionService.getDistribution({
         route_id: route_id ? parseInt(route_id) : undefined,
-        status: status ? status : undefined,
+        status: inputStatus,
         initDate: initDate ? new Date(initDate) : undefined, // yyyy-mm-dd
         finalDate: finalDate ? new Date(finalDate) : undefined,
         with_route: with_route?.toLowerCase() === 'true',
