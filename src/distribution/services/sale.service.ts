@@ -122,7 +122,12 @@ export class SaleService {
         where: { id: sale.user_id },
       })
     ).name;
-    return { ...info, user_name };
+    const payment_method = (
+      await this.prisma.transaction_payment.findFirstOrThrow({
+        where: { sale_id: sale.id },
+      })
+    ).payment_method;
+    return { ...info, user_name, payment_method };
   }
 
   async updateTransactionsPayment(values: {
@@ -158,7 +163,7 @@ export class SaleService {
         await this.transactionPaymentService.create({
           date,
           value: value_paid,
-          type: $Enums.transaction_payment_type.PAID,
+          type: $Enums.transaction_payment_type.SALE,
           payment_method,
           customer_id,
           user_id,
@@ -176,5 +181,13 @@ export class SaleService {
         sale_id,
       });
     }
+  }
+
+  async getSaleReportByDistribution(distribution_id: number) {
+    return await this.prisma.transaction_payment.groupBy({
+      by: ['payment_method'],
+      _sum: { value: true },
+      where: { sale: { distribution_id } },
+    });
   }
 }

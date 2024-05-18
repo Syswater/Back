@@ -8,5 +8,6 @@ export class SaleDto {
   user_id: number;
   product_inventory_id: number;
   value_paid: number;
+  payment_method: string;
   user_name: string;
 }

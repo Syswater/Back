@@ -131,6 +131,10 @@ export class CustomerService {
                 user_id: true,
                 product_inventory_id: true,
                 value_paid: true,
+                transaction_payment: {
+                  select: { payment_method: true },
+                  where: { type: 'SALE' },
+                },
               },
             }
           : undefined,
@@ -155,7 +159,11 @@ export class CustomerService {
         borrowedContainers: transaction_container[0]?.total ?? 0,
         sale:
           sale && sale.length > 0
-            ? { ...sale[0], user_name: info.name }
+            ? {
+                ...sale[0],
+                user_name: info.name,
+                payment_method: sale[0]?.transaction_payment[0]?.payment_method,
+              }
             : undefined,
       });
     });

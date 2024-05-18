@@ -1,0 +1,6 @@
+export enum PaymentMethod {
+  EFECTIVO = 'EFECTIVO',
+  NEQUI = 'NEQUI',
+  BANCOLOMBIA = 'BANCOLOMBIA',
+  DAVIPLATA = 'DAVIPLATA',
+}
