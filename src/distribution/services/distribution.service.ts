@@ -18,6 +18,7 @@ import {
 import { InitDistributionInput } from '../dto/distributionDTO/init-distribution.input';
 import { SaleService } from './sale.service';
 import { DistributionReport } from '../dto/distributionDTO/distribution-report.output';
+import { OpenDistributionInput } from '../dto/distributionDTO/open-distribution.input';
 
 @Injectable()
 export class DistributionService {
@@ -132,7 +133,7 @@ export class DistributionService {
   ): Promise<DistributionDto> {
     const { route_id, date } = distribution;
     await this.prisma.route.findFirstOrThrow({
-      where: { id: distribution.route_id, delete_at: null },
+      where: { id: route_id, delete_at: null },
     });
     const existingDistribution = await this.prisma.distribution.findFirst({
       where: {
@@ -237,6 +238,25 @@ export class DistributionService {
   ): DistributionDto {
     const { update_at, delete_at, ...info } = distribution;
     return { ...info, route };
+  }
+
+  async openDistribution(distribution: OpenDistributionInput) {
+    const { distribution_id, distributors_ids, load, product_inventory_id } =
+      distribution;
+    const users: { user_id: number; distribution_id: number }[] = [];
+    for (const user_id of distributors_ids) {
+      users.push({ user_id, distribution_id });
+    }
+
+    await this.prisma.distribution.update({
+      where: { id: distribution_id },
+      data: {
+        load_up: load,
+        product_inventory_id,
+      },
+    });
+
+    await this.prisma.distribution_user.createMany({ data: users });
   }
 
   async getReport(id: number): Promise<DistributionReport> {
