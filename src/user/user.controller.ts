@@ -15,7 +15,6 @@ import { Role } from '../constants/role';
 import { DeleteUserInput } from './dto/delete_user.input';
 import { UpdateUserInput } from './dto/update_user.input';
 import { ChangePasswordInput } from './dto/change-password.input';
-import { $Enums } from '@prisma/client';
 
 @Controller('users')
 export class UserController {
