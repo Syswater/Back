@@ -257,8 +257,14 @@ export class DistributionService {
         product_inventory_id,
       },
     });
-
-    await this.prisma.distribution_user.createMany({ data: users });
+    try {
+      await this.prisma.distribution_user.createMany({ data: users });
+    } catch (error) {
+      throw new DistributionError(
+        DistributionErrorCode.USER_DISTRIBUTION_IS_ALREADY_REGISTERED,
+        `Algunos de los usuarios ya están registrados en esta distribución`,
+      );
+    }
   }
 
   async closeDistribution(input: CloseDistributionInput) {
