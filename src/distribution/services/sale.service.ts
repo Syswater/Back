@@ -201,7 +201,8 @@ export class SaleService {
       };
     });
 
-    const total = per_method.reduce((a, b) => (a + b.method ? b.value : 0), 0);
+    const total = per_method.reduce((a, b) => a + (b.method ? b.value : 0), 0);
+    const debt = per_method.reduce((a, b) => a + (!b.method ? b.value : 0), 0);
 
     const quantitySold = (
       await this.prisma.sale.aggregate({
@@ -210,6 +211,6 @@ export class SaleService {
       })
     )._sum.amount;
 
-    return { total, per_method, quantitySold, debt: 0 };
+    return { total, per_method, quantitySold, debt };
   }
 }
