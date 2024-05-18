@@ -18,6 +18,7 @@ import { DeleteDistributionInput } from '../dto/distributionDTO/delete-distribut
 import { ChangeStatusDistributionInput } from '../dto/distributionDTO/changeStatus-distribution.input';
 import { InitDistributionInput } from '../dto/distributionDTO/init-distribution.input';
 import { OpenDistributionInput } from '../dto/distributionDTO/open-distribution.input';
+import { CloseDistributionInput } from '../dto/distributionDTO/close-distribution.input';
 
 @Controller('distribution')
 export class DistributionController {
@@ -128,6 +129,18 @@ export class DistributionController {
   ): Promise<boolean> {
     try {
       await this.distributionService.openDistribution(distribution);
+      return true;
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
+
+  @Post('close')
+  async closeDistribution(
+    @Body() distribution: CloseDistributionInput,
+  ): Promise<boolean> {
+    try {
+      await this.distributionService.closeDistribution(distribution);
       return true;
     } catch (error) {
       throw new BadRequestException(error);

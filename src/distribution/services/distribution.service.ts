@@ -19,6 +19,7 @@ import { InitDistributionInput } from '../dto/distributionDTO/init-distribution.
 import { SaleService } from './sale.service';
 import { DistributionReport } from '../dto/distributionDTO/distribution-report.output';
 import { OpenDistributionInput } from '../dto/distributionDTO/open-distribution.input';
+import { CloseDistributionInput } from '../dto/distributionDTO/close-distribution.input';
 
 @Injectable()
 export class DistributionService {
@@ -257,6 +258,28 @@ export class DistributionService {
     });
 
     await this.prisma.distribution_user.createMany({ data: users });
+  }
+
+  async closeDistribution(input: CloseDistributionInput) {
+    const { distribution_id } = input;
+    await this.prisma.$transaction(async (tx) => {
+      const distribution = await tx.distribution.update({
+        where: { id: distribution_id },
+        data: { status: 'CLOSED' },
+      });
+      await tx.customer.updateMany({
+        where: { route_id: distribution.route_id },
+        data: { is_served: false },
+      });
+      await tx.note.deleteMany({
+        where: { distribution_id: distribution.id },
+      });
+      await tx.product_inventory.update({
+        where: { id: distribution.product_inventory_id },
+        data: { amount: { decrement: distribution.broken_containers } },
+      });
+      return true;
+    });
   }
 
   async getReport(id: number): Promise<DistributionReport> {
