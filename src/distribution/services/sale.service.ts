@@ -88,12 +88,9 @@ export class SaleService{
         }
         await this.prisma.transaction_payment.deleteMany({where: {sale_id}});
         const date = moment().startOf('day').toDate();
-        if( value > value_paid){
-            await this.transactionPaymentService.create({date, value, type: $Enums.transaction_payment_type.DEBT, payment_method: null, customer_id, user_id, sale_id});
-            if(value_paid !== 0) await this.transactionPaymentService.create({date, value: value_paid, type: $Enums.transaction_payment_type.PAID, payment_method, customer_id, user_id, sale_id});
-        }
-        if( value === value_paid){
-            await this.transactionPaymentService.create({date, value, type: $Enums.transaction_payment_type.SALE, payment_method: payment_method, customer_id, user_id, sale_id});
+        await this.transactionPaymentService.create({date, value: value_paid, type: $Enums.transaction_payment_type.SALE, payment_method: payment_method, customer_id, user_id, sale_id});
+        if(value - value_paid > 0){
+            await this.transactionPaymentService.create({date, value: value - value_paid, type: $Enums.transaction_payment_type.DEBT, payment_method: null, customer_id, user_id, sale_id});
         }
     }
 
