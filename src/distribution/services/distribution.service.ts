@@ -252,6 +252,7 @@ export class DistributionService {
     await this.prisma.distribution.update({
       where: { id: distribution_id },
       data: {
+        status: 'OPENED',
         load_up: load,
         product_inventory_id,
       },
