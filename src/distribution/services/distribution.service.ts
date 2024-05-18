@@ -201,7 +201,7 @@ export class DistributionService {
     )
       throw new DistributionError(
         DistributionErrorCode.STATUS_PREORDER_CHANGE,
-        `De estado OPENED solo se puede cambiar a estado CLOSED o CLOSED_REQUEST`,
+        `De estado OPENED solo se puede cambiar a estado CLOSED o CLOSE_REQUEST`,
       );
     if (
       distribution.status == $Enums.distribution_status.OPENED &&
@@ -209,7 +209,7 @@ export class DistributionService {
     )
       throw new DistributionError(
         DistributionErrorCode.STATUS_PREORDER_CHANGE,
-        `De estado OPENED solo se puede cambiar a estado CLOSED o CLOSED_REQUEST`,
+        `De estado OPENED solo se puede cambiar a estado CLOSED o CLOSE_REQUEST`,
       );
     const updateDistribution = await this.prisma.distribution.update({
       where: { id },
