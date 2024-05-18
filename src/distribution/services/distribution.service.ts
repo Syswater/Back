@@ -16,16 +16,16 @@ import {
   splitWeekdaysString,
 } from 'src/constants/weekday';
 import { InitDistributionInput } from '../dto/distributionDTO/init-distribution.input';
-import { SaleService } from './sale.service';
-import { DistributionReport } from '../dto/distributionDTO/distribution-report.output';
+import { DistributionReport } from '../../reports/dto/distribution-report.output';
 import { OpenDistributionInput } from '../dto/distributionDTO/open-distribution.input';
 import { CloseDistributionInput } from '../dto/distributionDTO/close-distribution.input';
+import { ReportService } from '../../reports/report.service';
 
 @Injectable()
 export class DistributionService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly saleService: SaleService,
+    private readonly reportService: ReportService,
   ) {}
 
   async getDistribution(search: {
@@ -290,7 +290,7 @@ export class DistributionService {
   }
 
   async getReport(id: number): Promise<DistributionReport> {
-    const saleReport = await this.saleService.getSaleReportByDistribution(id);
+    const saleReport = await this.reportService.getSaleReportByDistribution(id);
 
     return {
       saleReport,

@@ -11,9 +11,11 @@ import { CustomerModule } from './customer/customer.module';
 import { OrderModule } from './order/order.module';
 import { DistributionModule } from './distribution/distribution.module';
 import { TransactionModule } from './transaction/transaction.module';
+import { ReportModule } from './reports/report.module';
 
 @Module({
-  imports: [AuthModule,
+  imports: [
+    AuthModule,
     JwtModule.register({
       global: true,
       secret: process.env.SECRET,
@@ -25,8 +27,10 @@ import { TransactionModule } from './transaction/transaction.module';
     CustomerModule,
     OrderModule,
     DistributionModule,
-    TransactionModule,],
+    TransactionModule,
+    ReportModule,
+  ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
 })
-export class AppModule { }
+export class AppModule {}
