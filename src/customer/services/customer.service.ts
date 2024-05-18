@@ -11,6 +11,10 @@ import {
 import { NoteDto } from '../dto/noteDTO/note.output';
 import { OrderDto } from 'src/order/dto/order.output';
 import { SaleDto } from '../../distribution/dto/saleDTO/sale.output';
+import * as xlsx from 'xlsx';
+import { ExcelRow } from '../dto/customerDTO/create-many-customers.input';
+import { DefaultArgs } from '@prisma/client/runtime/library';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class CustomerService {
@@ -87,8 +91,8 @@ export class CustomerService {
                 customer_id: true,
               },
               orderBy: {
-                distribution_id: 'asc'
-              }
+                distribution_id: 'asc',
+              },
             }
           : undefined,
         order: with_order
@@ -127,6 +131,10 @@ export class CustomerService {
                 user_id: true,
                 product_inventory_id: true,
                 value_paid: true,
+                transaction_payment: {
+                  select: { payment_method: true },
+                  where: { type: 'SALE' },
+                },
               },
             }
           : undefined,
@@ -149,7 +157,14 @@ export class CustomerService {
         order: order,
         totalDebt: transaction_payment[0]?.total ?? 0,
         borrowedContainers: transaction_container[0]?.total ?? 0,
-        sale: sale && sale.length > 0 ? sale[0] : undefined,
+        sale:
+          sale && sale.length > 0
+            ? {
+                ...sale[0],
+                user_name: info.name,
+                payment_method: sale[0]?.transaction_payment[0]?.payment_method,
+              }
+            : undefined,
       });
     });
   }
@@ -162,7 +177,7 @@ export class CustomerService {
       customer.route_order = await this.validateRouteOrder(
         customer.route_order,
         route.id,
-        true,
+        true
       );
       this.updateRouteOrder({
         current_route_order: customer.route_order,
@@ -200,7 +215,7 @@ export class CustomerService {
     customer.route_order = await this.validateRouteOrder(
       customer.route_order,
       customer.route_id,
-      past_route_id !== customer.route_id
+      past_route_id !== customer.route_id,
     );
     const updated_customer = await this.prisma.customer.update({
       where: { id },
@@ -354,7 +369,7 @@ export class CustomerService {
   async validateRouteOrder(
     current_route_order: number,
     route_id: number,
-    changeRoute: boolean
+    changeRoute: boolean,
   ): Promise<number> {
     const higher = await this.prisma.customer.findFirst({
       where: { route_id, delete_at: null },
@@ -363,7 +378,7 @@ export class CustomerService {
     });
     if (higher) {
       if (current_route_order > higher.route_order) {
-        return changeRoute? higher.route_order + 1 : higher.route_order;
+        return changeRoute ? higher.route_order + 1 : higher.route_order;
       }
       if (current_route_order < 1) {
         return 1;
@@ -372,5 +387,94 @@ export class CustomerService {
       current_route_order = 1;
     }
     return current_route_order;
+  }
+
+  async createMany(file: Express.Multer.File, sheet_number: number) {
+    const workbook = xlsx.read(file.buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[sheet_number];
+    const sheet = workbook.Sheets[sheetName];
+
+    const data: ExcelRow[] = xlsx.utils.sheet_to_json(sheet);
+    const created: Promise<any>[] = [];
+    created.push(this.createRouteUsers(data, created, sheetName));
+    await Promise.all(created);
+  }
+
+  private async createRouteUsers(
+    data: ExcelRow[],
+    created: Promise<any>[],
+    route: string,
+  ) {
+    for (const row of data) {
+      await this.prisma.$transaction(
+        async (tx) => {
+          return this.proccessCreateUser(row, route, tx);
+        },
+        {
+          maxWait: 300000,
+          timeout: 500000,
+        },
+      );
+    }
+  }
+
+  private async proccessCreateUser(
+    row: ExcelRow,
+    route: string,
+    tx: Omit<
+      PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>,
+      '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+    >,
+  ) {
+    const {
+      address,
+      containers,
+      debit,
+      route_order,
+      tape_preference,
+      cellphone,
+      name,
+      neighborhood,
+      note,
+      product_inventroy_id,
+    } = row;
+    return tx.customer.create({
+      data: {
+        address,
+        is_contactable: 1,
+        route_order,
+        cellphone,
+        name,
+        neighborhood,
+        tape_preference,
+        route: { connect: { name: route } },
+        note: note ? { create: { description: note } } : undefined,
+        transaction_container:
+          containers > 0
+            ? {
+                create: {
+                  date: new Date(),
+                  total: containers,
+                  value: containers,
+                  type: 'BORROWED',
+                  user_id: 10,
+                  product_inventroy_id,
+                },
+              }
+            : undefined,
+        transaction_payment:
+          debit > 0
+            ? {
+                create: {
+                  date: new Date(),
+                  total: debit,
+                  value: debit,
+                  type: 'DEBT',
+                  user_id: 10,
+                },
+              }
+            : undefined,
+      },
+    });
   }
 }
