@@ -7,7 +7,6 @@ import { UpdateSaleInput } from '../dto/saleDTO/update-sale.input';
 import { TransactionPaymentService } from 'src/transaction/services/transaction-payment.service';
 import * as moment from 'moment';
 import { $Enums } from '@prisma/client';
-import { SaleReport } from '../dto/saleDTO/sale-report.output';
 
 @Injectable()
 export class SaleService {

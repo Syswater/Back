@@ -15,12 +15,13 @@ import { ExpenseController } from './controllers/expense.controller';
 import { ProductInventoryController } from './controllers/product-inventory.controller';
 import { SaleController } from './controllers/sale.controller';
 import { TransactionPaymentService } from 'src/transaction/services/transaction-payment.service';
+import { ReportService } from '../reports/report.service';
 
 @Module({
   providers: [
-    DistributionService, 
-    PrismaService, 
-    ExpenseCategoryService, 
+    DistributionService,
+    PrismaService,
+    ExpenseCategoryService,
     ExpenseService,
     ProductInventoryService,
     SaleService,
@@ -28,14 +29,15 @@ import { TransactionPaymentService } from 'src/transaction/services/transaction-
     ExpenseTriggersService,
     ProductTriggersService,
     SaleTriggersService,
-    TransactionPaymentService
+    TransactionPaymentService,
+    ReportService,
   ],
   controllers: [
     DistributionController,
     ExpenseCategoryController,
     ExpenseController,
     ProductInventoryController,
-    SaleController
-  ]
+    SaleController,
+  ],
 })
 export class DistributionModule {}
