@@ -191,6 +191,13 @@ export class DistributionService {
     statusInput: ChangeStatusDistributionInput,
   ): Promise<DistributionDto> {
     const { id, status } = statusInput;
+
+    if (status == $Enums.distribution_status.PREORDER)
+      throw new DistributionError(
+        DistributionErrorCode.STATUS_PREORDER_CHANGE,
+        `No se puede cambiar al estado PREORDER`,
+      );
+
     const distribution = await this.prisma.distribution.findFirstOrThrow({
       where: {
         id,
@@ -198,11 +205,7 @@ export class DistributionService {
         status: { not: $Enums.distribution_status.CLOSED },
       },
     });
-    if (status == $Enums.distribution_status.PREORDER)
-      throw new DistributionError(
-        DistributionErrorCode.STATUS_PREORDER_CHANGE,
-        `No se puede cambiar al estado PREORDER`,
-      );
+
     if (
       distribution.status == $Enums.distribution_status.PREORDER &&
       status != $Enums.distribution_status.OPENED
@@ -211,22 +214,17 @@ export class DistributionService {
         DistributionErrorCode.STATUS_PREORDER_CHANGE,
         `De estado PREORDER solo se puede cambiar a estado OPENED`,
       );
+
     if (
       distribution.status == $Enums.distribution_status.OPENED &&
-      status != $Enums.distribution_status.CLOSED
-    )
-      throw new DistributionError(
-        DistributionErrorCode.STATUS_PREORDER_CHANGE,
-        `De estado OPENED solo se puede cambiar a estado CLOSED o CLOSE_REQUEST`,
-      );
-    if (
-      distribution.status == $Enums.distribution_status.OPENED &&
+      status != $Enums.distribution_status.CLOSED &&
       status != $Enums.distribution_status.CLOSE_REQUEST
     )
       throw new DistributionError(
         DistributionErrorCode.STATUS_PREORDER_CHANGE,
         `De estado OPENED solo se puede cambiar a estado CLOSED o CLOSE_REQUEST`,
       );
+
     const updateDistribution = await this.prisma.distribution.update({
       where: { id },
       data: { status },
