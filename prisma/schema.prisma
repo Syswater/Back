@@ -171,13 +171,13 @@ model transaction_container {
   delete_at            DateTime?                  @db.Timestamp(0)
   customer_id          Int
   user_id              Int
-  product_inventroy_id Int
+  product_inventory_id Int
   customer             customer                   @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_CUS_TRA_CO")
-  product_inventory    product_inventory          @relation(fields: [product_inventroy_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_PRO_TRA_CO")
+  product_inventory    product_inventory          @relation(fields: [product_inventory_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_PRO_TRA_CO")
   user                 user                       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_USE_TRA_CO")
 
   @@index([customer_id], map: "FK_CUS_TRA_CO_idx")
-  @@index([product_inventroy_id], map: "FK_PRO_TRA_CO_idx")
+  @@index([product_inventory_id], map: "FK_PRO_TRA_CO_idx")
   @@index([user_id], map: "FK_USE_TRA_CO_idx")
 }
 

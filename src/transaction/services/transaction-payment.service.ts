@@ -11,6 +11,8 @@ import {
   TransactionError,
   TransactionErrorCode,
 } from 'src/exceptions/transaction-error';
+import { CustomerError, CustomerErrorCode } from 'src/exceptions/customer-error';
+import { UserError, UserErrorCode } from 'src/exceptions/user-error';
 
 @Injectable()
 export class TransactionPaymentService {
@@ -20,9 +22,10 @@ export class TransactionPaymentService {
     search: SearchTransactionInput,
   ): Promise<Pagination<TransactionPaymentDto>> {
     const { customer_id, pageNumber, size } = search;
-    await this.prisma.customer.findFirstOrThrow({
+    const customer = await this.prisma.customer.findFirst({
       where: { id: customer_id, delete_at: null },
     });
+    if(!customer) throw new CustomerError(CustomerErrorCode.CUSTOMER_NOT_FOUND, `No existe un cliente con id ${customer_id}`);
     const transaction_pagination =
       await this.prisma.transaction_payment.findMany({
         where: {
@@ -57,12 +60,14 @@ export class TransactionPaymentService {
     transaction: CreateTransactionPayment,
   ): Promise<TransactionPaymentDto> {
     const { customer_id, user_id } = transaction;
-    await this.prisma.customer.findFirstOrThrow({
+    const customer = await this.prisma.customer.findFirst({
       where: { id: customer_id, delete_at: null },
     });
-    await this.prisma.user.findFirstOrThrow({
+    if(!customer) throw new CustomerError(CustomerErrorCode.CUSTOMER_NOT_FOUND, `No existe un cliente con id ${customer_id}`);
+    const user = await this.prisma.user.findFirst({
       where: { id: user_id, delete_at: null },
     });
+    if(!user) throw new UserError(UserErrorCode.USER_NOT_FOUND, `No existe un usuario con id ${user_id}`);
     if (
       transaction.type === $Enums.transaction_payment_type.PAID &&
       (await this.getTotalDebt(customer_id)) - transaction.value < 0

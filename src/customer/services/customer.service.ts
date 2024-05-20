@@ -436,7 +436,7 @@ export class CustomerService {
       name,
       neighborhood,
       note,
-      product_inventroy_id,
+      product_inventory_id,
     } = row;
     return tx.customer.create({
       data: {
@@ -458,7 +458,7 @@ export class CustomerService {
                   value: containers,
                   type: 'BORROWED',
                   user_id: 10,
-                  product_inventroy_id,
+                  product_inventory_id,
                 },
               }
             : undefined,

@@ -14,7 +14,7 @@ export class ExpenseCategoryController{
         try {
             return this.expenseCategoryService.getExpenseCategories();
         } catch (error) {
-            throw new BadRequestException("Los datos proporcionados son incorrectos");
+            throw new BadRequestException(error);
         }
     }
 
@@ -25,7 +25,7 @@ export class ExpenseCategoryController{
             const newCategory= await this.expenseCategoryService.create(expenseCategory);
             return newCategory;
         } catch (error) {
-            throw new BadRequestException("Los datos proporcionados son incorrectos");
+            throw new BadRequestException(error);
         }
     }
 
@@ -35,7 +35,7 @@ export class ExpenseCategoryController{
             const updatedCategory = await this.expenseCategoryService.update(expenseCategory);
             return updatedCategory;
         } catch (error) {
-            throw new BadRequestException("Los datos proporcionados son incorrectos");
+            throw new BadRequestException(error);
         }
     }
 

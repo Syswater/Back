@@ -4,6 +4,7 @@ import { ProductInventoryDto } from "../dto/productDTO/product.output";
 import { ProductInventory } from "../entities/product-inventory.entity";
 import { CreateProductInput } from "../dto/productDTO/create-product.input";
 import { UpdateProductInput } from "../dto/productDTO/update-product.input";
+import { ProductError, ProductErrorCode } from "src/exceptions/product-error";
 
 @Injectable()
 export class ProductInventoryService{
@@ -23,6 +24,8 @@ export class ProductInventoryService{
 
     async update(product: UpdateProductInput): Promise<ProductInventoryDto> {
         const {id, is_container, ...info} = product;
+        const value = await this.prisma.product_inventory.findFirst({where: {id, delete_at: null}});
+        if(!value) throw new ProductError(ProductErrorCode.PRODUCT_NOT_FOUND, `No existe un producto con id ${id}`);
         const updateProduct = await this.prisma.product_inventory.update({
             where: { id },
             data: { ...info, is_container: is_container?1:0 }
@@ -31,7 +34,8 @@ export class ProductInventoryService{
     }
 
     async delete(id: number): Promise<ProductInventoryDto> {
-        const product = await this.prisma.product_inventory.findFirstOrThrow({ where: { id, delete_at: null } });
+        const product = await this.prisma.product_inventory.findFirst({ where: { id, delete_at: null } });
+        if(!product) throw new ProductError(ProductErrorCode.PRODUCT_NOT_FOUND, `No existe un producto con id ${id}`);
         const deletedProduct = await this.prisma.product_inventory.delete({
             where: { id }
         });

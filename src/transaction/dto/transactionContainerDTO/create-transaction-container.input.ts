@@ -29,6 +29,6 @@ export class CreateTransactionContainer{
     @IsNotEmpty({message:'El id del producto no puede estar vacio'})
     @IsInt({message:'El id del producto debe ser un numero entero'})
     @IsPositive({message: 'El id del producto debe ser positivo'})
-    product_inventroy_id: number;
+    product_inventory_id: number;
 
 }

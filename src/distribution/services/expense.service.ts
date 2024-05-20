@@ -5,6 +5,8 @@ import { Expense } from "../entities/expense.entity";
 import { CreateExpenseInput } from "../dto/expenseDTO/create-expense.input";
 import { UpdateExpenseInput } from "../dto/expenseDTO/update-expense.input";
 import { ExpenseCategory } from "../entities/expense-category.entity";
+import { DistributionError, DistributionErrorCode } from "src/exceptions/distribution-error";
+import { ExpenseError, ExpenseErrorCode } from "src/exceptions/expense-error";
 
 @Injectable()
 export class ExpenseService{
@@ -45,14 +47,18 @@ export class ExpenseService{
     }
 
     async create(expense: CreateExpenseInput): Promise<ExpenseDto> {
-        await this.prisma.distribution.findFirstOrThrow({where:{id:expense.distribution_id, delete_at: null}});
-        await this.prisma.expense_category.findFirstOrThrow({where:{id:expense.expense_category_id}});
+        const distribution = await this.prisma.distribution.findFirst({where:{id:expense.distribution_id, delete_at: null}});
+        if(!distribution) throw new DistributionError(DistributionErrorCode.DISTRIBUTION_NOT_FOUND, `No existe una distribución con id ${expense.distribution_id}`)
+        const expense_category = await this.prisma.expense_category.findFirst({where:{id:expense.expense_category_id}});
+        if(!expense_category) throw new ExpenseError(ExpenseErrorCode.CATEGORY_NOT_FOUND, `No existe una categoria de gasto con id ${expense.expense_category_id}`)
         const newExpense = await this.prisma.expense.create({ data: expense });
         return this.getExpenseDto(newExpense);
     }
 
     async update(expense: UpdateExpenseInput): Promise<ExpenseDto> {
         const {id, ...info} = expense;
+        const value = await this.prisma.expense.findFirst({where: {id, delete_at: null}});
+        if(!value) throw new ExpenseError(ExpenseErrorCode.EXPENSE_NOT_FOUND, `No existe un gasto con id ${id}`)
         const updateExpense = await this.prisma.expense.update({
             where: { id },
             data: { ...info }
@@ -61,7 +67,8 @@ export class ExpenseService{
     }
 
     async delete(id: number): Promise<ExpenseDto> {
-        const expense = await this.prisma.expense.findFirstOrThrow({ where: { id, delete_at: null } });
+        const expense = await this.prisma.expense.findFirst({ where: { id, delete_at: null } });
+        if(!expense) throw new ExpenseError(ExpenseErrorCode.EXPENSE_NOT_FOUND, `No existe un gasto con id ${id}`)
         const deletedExpense = await this.prisma.expense.delete({
             where: { id }
         });

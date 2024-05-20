@@ -8,6 +8,6 @@ export class TransactionContainerDto {
   total: number;
   customer_id: number;
   user_id: number;
-  product_inventroy_id: number;
+  product_inventory_id: number;
   user_name: string;
 }

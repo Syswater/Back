@@ -4,6 +4,7 @@ import { ExpenseCategoryDto } from "../dto/expenseCategoryDTO/expenseCategory.ou
 import { ExpenseCategory } from "../entities/expense-category.entity";
 import { CreateExpenseCategoryInput } from "../dto/expenseCategoryDTO/create-expenseCategory.input";
 import { UpdateExpenseCategoryInput } from "../dto/expenseCategoryDTO/update-expenseCategory";
+import { ExpenseError, ExpenseErrorCode } from "src/exceptions/expense-error";
 
 @Injectable()
 export class ExpenseCategoryService {
@@ -22,6 +23,10 @@ export class ExpenseCategoryService {
 
     async update(expenseCategory: UpdateExpenseCategoryInput): Promise<ExpenseCategoryDto> {
         const { id, ...info } = expenseCategory;
+        const category = await this.prisma.expense_category.findFirst({where: {id}});
+        if(!category){
+            throw new ExpenseError(ExpenseErrorCode.CATEGORY_NOT_FOUND, `No existe una categoria de gasto con id ${id}`);
+        }
         const updateCategory = await this.prisma.expense_category.update({
             where: { id },
             data: { ...info }
@@ -30,7 +35,10 @@ export class ExpenseCategoryService {
     }
 
     async delete(id: number): Promise<ExpenseCategoryDto> {
-        const category = await this.prisma.expense_category.findFirstOrThrow({ where: { id } });
+        const category = await this.prisma.expense_category.findFirst({ where: { id } });
+        if(!category){
+            throw new ExpenseError(ExpenseErrorCode.CATEGORY_NOT_FOUND, `No existe una categoria de gasto con id ${id}`);
+        }
         const deletedCategory = await this.prisma.expense_category.delete({
             where: { id }
         });

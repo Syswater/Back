@@ -10,5 +10,5 @@ export class TransactionContainer implements transaction_container{
     delete_at: Date;
     customer_id: number;
     user_id: number;
-    product_inventroy_id: number;
+    product_inventory_id: number;
 }

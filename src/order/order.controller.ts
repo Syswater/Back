@@ -11,7 +11,8 @@ export class OrderController {
 
     @Get('findAll')
     async findAll(@Query("distribution_id") distribution_id: string): Promise<OrderDto[]> {
-        return await this.orderService.getOrders(parseInt(distribution_id));
+
+        return await this.orderService.getOrders( distribution_id? parseInt(distribution_id) : undefined);
     }
 
     @Post('create')
@@ -30,7 +31,7 @@ export class OrderController {
             const updatedOrder = await this.orderService.update(order);
             return updatedOrder;
         } catch (error) {
-            throw new BadRequestException("Los datos proporcionados son incorrectos");
+            throw new BadRequestException(error);
         }
     }
 

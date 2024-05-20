@@ -27,7 +27,7 @@ export class ExpenseController{
                 }
             )
         } catch (error) {
-            throw new BadRequestException("Los datos proporcionados son incorrectos");
+            throw new BadRequestException(error);
         }
     }
 
@@ -48,7 +48,7 @@ export class ExpenseController{
             const updatedExpense = await this.expenseService.update(expense);
             return updatedExpense;
         } catch (error) {
-            throw new BadRequestException("Los datos proporcionados son incorrectos");
+            throw new BadRequestException(error);
         }
     }
 

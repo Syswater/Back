@@ -5,6 +5,8 @@ import { Order } from './entities/order.entity';
 import { CreateOrderInput } from './dto/create-order.input';
 import { UpdateOrderInput } from './dto/update-order.input';
 import { OrderError, OrderErrorCode } from 'src/exceptions/order-error';
+import { CustomerError, CustomerErrorCode } from 'src/exceptions/customer-error';
+import { DistributionError, DistributionErrorCode } from 'src/exceptions/distribution-error';
 
 @Injectable()
 export class OrderService {
@@ -19,12 +21,14 @@ export class OrderService {
   }
 
   async create(order: CreateOrderInput): Promise<OrderDto> {
-    await this.prisma.customer.findFirstOrThrow({
+    const customer = await this.prisma.customer.findFirst({
       where: { id: order.customer_id, delete_at: null },
     });
-    await this.prisma.distribution.findFirstOrThrow({
+    if(!customer) throw new CustomerError(CustomerErrorCode.CUSTOMER_NOT_FOUND, `No existe un cliente con id ${order.customer_id}`);
+    const distribution = await this.prisma.distribution.findFirst({
       where: { id: order.distribution_id, delete_at: null },
     });
+    if(!distribution) throw new DistributionError(DistributionErrorCode.DISTRIBUTION_NOT_FOUND, `No existe una distribución con id ${order.distribution_id}`);
     const exisitingOrder = await this.prisma.order.findFirst({
       where: {
         customer_id: order.customer_id,
@@ -54,6 +58,8 @@ export class OrderService {
 
   async update(order: UpdateOrderInput): Promise<OrderDto> {
     const { id, ...info } = order;
+    const value = await this.prisma.order.findFirst({where: {id, delete_at: null}});
+    if(!value) throw new OrderError(OrderErrorCode.ORDER_NOT_FOUND, `No existe una orden con id ${id}`)
     const updateOrder = await this.prisma.order.update({
       where: { id },
       data: { ...info },
@@ -63,9 +69,10 @@ export class OrderService {
   }
 
   async delete(id: number): Promise<OrderDto> {
-    const order = await this.prisma.order.findFirstOrThrow({
+    const order = await this.prisma.order.findFirst({
       where: { id, delete_at: null },
     });
+    if(!order) throw new OrderError(OrderErrorCode.ORDER_NOT_FOUND, `No existe una orden con id ${id}`)
     const deletedOrder = await this.prisma.order.delete({
       where: { id },
     });
