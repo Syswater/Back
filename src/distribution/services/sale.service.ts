@@ -7,6 +7,12 @@ import { UpdateSaleInput } from '../dto/saleDTO/update-sale.input';
 import { TransactionPaymentService } from 'src/transaction/services/transaction-payment.service';
 import * as moment from 'moment';
 import { $Enums } from '@prisma/client';
+import { SaleReport } from 'src/reports/dto/sale-report.output';
+import { CustomerError, CustomerErrorCode } from 'src/exceptions/customer-error';
+import { DistributionError, DistributionErrorCode } from 'src/exceptions/distribution-error';
+import { UserError, UserErrorCode } from 'src/exceptions/user-error';
+import { ProductError, ProductErrorCode } from 'src/exceptions/product-error';
+import { SaleError, SaleErrorCode } from 'src/exceptions/sale-error';
 
 @Injectable()
 export class SaleService {
@@ -64,18 +70,22 @@ export class SaleService {
 
   async create(sale: CreateSaleInput): Promise<SaleDto> {
     const { payment_method, ...info } = sale;
-    await this.prisma.customer.findFirstOrThrow({
+    const customer = await this.prisma.customer.findFirst({
       where: { id: sale.customer_id, delete_at: null },
     });
-    await this.prisma.distribution.findFirstOrThrow({
+    if(!customer) throw new CustomerError(CustomerErrorCode.CUSTOMER_NOT_FOUND, `No existe un cliente con id ${sale.customer_id}`);
+    const distribution = await this.prisma.distribution.findFirst({
       where: { id: sale.distribution_id, delete_at: null },
     });
-    await this.prisma.user.findFirstOrThrow({
+    if(!distribution) throw new DistributionError(DistributionErrorCode.DISTRIBUTION_NOT_FOUND, `No existe una distribución con id ${sale.distribution_id}`);
+    const user = await this.prisma.user.findFirst({
       where: { id: sale.user_id, delete_at: null },
     });
-    await this.prisma.product_inventory.findFirstOrThrow({
+    if(!user) throw new UserError(UserErrorCode.USER_NOT_FOUND, `No existe un usuario con id ${sale.user_id}`);
+    const product = await this.prisma.product_inventory.findFirst({
       where: { id: sale.product_inventory_id, delete_at: null },
     });
+    if(!product) throw new ProductError(ProductErrorCode.PRODUCT_NOT_FOUND, `No existe un producto en el inventario con id ${sale.product_inventory_id}`);
     const date = moment().startOf('day').toDate();
     const newSale = await this.prisma.sale.create({ data: { ...info, date } });
     await this.updateTransactionsPayment({
@@ -91,7 +101,8 @@ export class SaleService {
 
   async update(sale: UpdateSaleInput): Promise<SaleDto> {
     const { id, payment_method, ...info } = sale;
-    await this.prisma.sale.findFirstOrThrow({ where: { id, delete_at: null } });
+    const value = await this.prisma.sale.findFirst({ where: { id, delete_at: null } });
+    if(!value) throw new SaleError(SaleErrorCode.SALE_NOT_FOUND, `No existe una venta con id ${id}`);
     const updateSale = await this.prisma.sale.update({
       where: { id },
       data: { ...info },
@@ -108,10 +119,12 @@ export class SaleService {
   }
 
   async delete(id: number): Promise<SaleDto> {
-    await this.prisma.sale.findFirstOrThrow({ where: { id, delete_at: null } });
+    const sale = await this.prisma.sale.findFirst({ where: { id, delete_at: null } });
+    if(!sale) throw new SaleError(SaleErrorCode.SALE_NOT_FOUND, `No existe una venta con id ${id}`);
     const deletedSale = await this.prisma.sale.delete({
       where: { id },
     });
+    await this.prisma.transaction_payment.deleteMany({where: {sale_id: id}});
     return this.getSaleDto(deletedSale);
   }
 
@@ -122,64 +135,54 @@ export class SaleService {
         where: { id: sale.user_id },
       })
     ).name;
-    const payment_method = (
-      await this.prisma.transaction_payment.findFirstOrThrow({
-        where: { sale_id: sale.id },
-      })
-    ).payment_method;
+    const transaction = await this.prisma.transaction_payment.findFirst({
+        where: { sale_id: sale.id, type: $Enums.transaction_payment_type.SALE },
+      });
+    const payment_method = transaction?transaction.payment_method: undefined;
     return { ...info, user_name, payment_method };
   }
 
-  async updateTransactionsPayment(values: {
-    value: number;
-    value_paid: number;
-    payment_method?: $Enums.transaction_payment_payment_method;
-    customer_id: number;
-    user_id: number;
-    sale_id: number;
-  }) {
-    let { value, value_paid, payment_method, customer_id, user_id, sale_id } =
-      values;
-    if (!payment_method) {
-      payment_method = (
-        await this.prisma.transaction_payment.findFirstOrThrow({
-          where: { sale_id, type: $Enums.transaction_payment_type.PAID },
-        })
-      ).payment_method;
+
+    async updateTransactionsPayment(values: {value:number, value_paid:number, payment_method?: $Enums.transaction_payment_payment_method, customer_id:number, user_id:number, sale_id: number}) {
+        let {value, value_paid, payment_method, customer_id, user_id, sale_id} = values;
+        if(!payment_method){
+            payment_method = (await this.prisma.transaction_payment.findFirstOrThrow({where:{ sale_id, type: $Enums.transaction_payment_type.PAID}})).payment_method;
+        }
+        await this.prisma.transaction_payment.deleteMany({where: {sale_id}});
+        const date = moment().startOf('day').toDate();
+        await this.transactionPaymentService.create({date, value: value_paid, type: $Enums.transaction_payment_type.SALE, payment_method: payment_method, customer_id, user_id, sale_id});
+        if(value - value_paid > 0){
+            await this.transactionPaymentService.create({date, value: value - value_paid, type: $Enums.transaction_payment_type.DEBT, payment_method: null, customer_id, user_id, sale_id});
+        }
     }
-    await this.prisma.transaction_payment.deleteMany({ where: { sale_id } });
-    const date = moment().startOf('day').toDate();
-    if (value > value_paid) {
-      await this.transactionPaymentService.create({
-        date,
-        value,
-        type: $Enums.transaction_payment_type.DEBT,
-        payment_method: null,
-        customer_id,
-        user_id,
-        sale_id,
-      });
-      if (value_paid !== 0)
-        await this.transactionPaymentService.create({
-          date,
-          value: value_paid,
-          type: $Enums.transaction_payment_type.SALE,
-          payment_method,
-          customer_id,
-          user_id,
-          sale_id,
-        });
-    }
-    if (value === value_paid) {
-      await this.transactionPaymentService.create({
-        date,
-        value,
-        type: $Enums.transaction_payment_type.SALE,
-        payment_method: payment_method,
-        customer_id,
-        user_id,
-        sale_id,
-      });
-    }
+
+  async getSaleReportByDistribution(
+    distribution_id: number,
+  ): Promise<SaleReport> {
+    const report = await this.prisma.transaction_payment.groupBy({
+      by: ['payment_method', 'date'],
+      _sum: { value: true },
+      where: { sale: { distribution_id } },
+    });
+
+    const per_method = report.map((item) => {
+      return {
+        method: item.payment_method,
+        value: item._sum.value,
+        date: moment(item.date).format('DD/MM/YYYY'),
+      };
+    });
+
+    const total = per_method.reduce((a, b) => a + (b.method ? b.value : 0), 0);
+    const debt = per_method.reduce((a, b) => a + (!b.method ? b.value : 0), 0);
+
+    const quantitySold = (
+      await this.prisma.sale.aggregate({
+        _sum: { amount: true },
+        where: { distribution_id },
+      })
+    )._sum.amount;
+
+    return { total, per_method, quantitySold, debt };
   }
 }

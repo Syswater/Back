@@ -48,7 +48,7 @@ export class DistributionController {
 
       return this.distributionService.getDistribution({
         route_id: route_id ? parseInt(route_id) : undefined,
-        status: inputStatus,
+        status: inputStatus.length > 0?inputStatus:undefined,
         initDate: initDate ? new Date(initDate) : undefined, // yyyy-mm-dd
         finalDate: finalDate ? new Date(finalDate) : undefined,
         with_route: with_route?.toLowerCase() === 'true',

@@ -24,7 +24,7 @@ export class NoteController {
             const newNote = await this.noteService.create(note);
             return newNote;
         } catch (error) {
-            throw new BadRequestException("Los datos proporcionados son incorrectos");
+            throw new BadRequestException(error);
         }
     }
 
@@ -34,7 +34,7 @@ export class NoteController {
             const updatedNote = await this.noteService.update(note);
             return updatedNote;
         } catch (error) {
-            throw new BadRequestException(""+ error);
+            throw new BadRequestException(error);
         }
     }
 

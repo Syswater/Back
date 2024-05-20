@@ -23,6 +23,8 @@ import { ReportService } from '../../reports/report.service';
 import { SaleReport } from '../../reports/dto/sale-report.output';
 import { ExpenseReport } from '../../reports/dto/expense-report.output';
 import { ContainerReport } from '../../reports/dto/product-inventory-report.output';
+import { RouteError, RouteErrorCode } from 'src/exceptions/route-error';
+import { ProductError, ProductErrorCode } from 'src/exceptions/product-error';
 
 @Injectable()
 export class DistributionService {
@@ -108,12 +110,22 @@ export class DistributionService {
     distribution: CreateDistributionInput,
   ): Promise<DistributionDto> {
     const { route_id } = distribution;
-    await this.prisma.route.findFirstOrThrow({
+    const route = await this.prisma.route.findFirst({
       where: { id: distribution.route_id, delete_at: null },
     });
-    await this.prisma.product_inventory.findFirstOrThrow({
+    if (!route)
+      throw new RouteError(
+        RouteErrorCode.ROUTE_NOT_FOUND,
+        `La distribución no se puede crear porque no existe una ruta con el id ${route_id}`,
+      );
+    const product = await this.prisma.product_inventory.findFirst({
       where: { id: distribution.product_inventory_id, delete_at: null },
     });
+    if (!product)
+      throw new ProductError(
+        ProductErrorCode.PRODUCT_NOT_FOUND,
+        `La distribución no se puede crear porque no existe un producto con el id ${distribution.product_inventory_id}`,
+      );
     const existingDistribution = await this.prisma.distribution.findFirst({
       where: {
         route_id,
@@ -227,9 +239,15 @@ export class DistributionService {
   }
 
   async delete(id: number): Promise<DistributionDto> {
-    const distribution = await this.prisma.distribution.findFirstOrThrow({
+    const distribution = await this.prisma.distribution.findFirst({
       where: { id, delete_at: null },
     });
+    if (!distribution) {
+      throw new DistributionError(
+        DistributionErrorCode.DISTRIBUTION_NOT_FOUND,
+        `No existe una distribución con id ${id}`,
+      );
+    }
     const deletedDistribution = await this.prisma.distribution.delete({
       where: { id },
     });

@@ -37,7 +37,7 @@ export class SaleController {
         customer_id: customer_id ? parseInt(customer_id) : undefined,
       });
     } catch (error) {
-      throw new BadRequestException('Los datos proporcionados son incorrectos');
+      throw new BadRequestException(error);
     }
   }
 
@@ -53,7 +53,7 @@ export class SaleController {
       const updatedSale = await this.saleService.update(sale);
       return updatedSale;
     } catch (error) {
-      throw new BadRequestException('Los datos proporcionados son incorrectos');
+      throw new BadRequestException(error);
     }
   }
 

@@ -15,7 +15,7 @@ export class ProductInventoryController{
         try {
             return this.productService.getProducts();
         } catch (error) {
-            throw new BadRequestException("Los datos proporcionados son incorrectos");
+            throw new BadRequestException(error);
         }
     }
 
@@ -26,7 +26,7 @@ export class ProductInventoryController{
             const newProduct= await this.productService.create(product);
             return newProduct;
         } catch (error) {
-            throw new BadRequestException("Los datos proporcionados son incorrectos");
+            throw new BadRequestException(error);
         }
     }
 
@@ -36,7 +36,7 @@ export class ProductInventoryController{
             const updatedProduct = await this.productService.update(product);
             return updatedProduct;
         } catch (error) {
-            throw new BadRequestException("Los datos proporcionados son incorrectos");
+            throw new BadRequestException(error);
         }
     }
 

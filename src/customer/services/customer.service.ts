@@ -177,7 +177,7 @@ export class CustomerService {
       customer.route_order = await this.validateRouteOrder(
         customer.route_order,
         route.id,
-        false,
+        true,
       );
       this.updateRouteOrder({
         current_route_order: customer.route_order,
