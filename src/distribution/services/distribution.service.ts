@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { DistributionDto } from '../dto/distributionDTO/distribution.output';
-import { $Enums } from '@prisma/client';
+import { $Enums, Prisma, PrismaClient } from '@prisma/client';
 import { Distribution } from '../entities/distribution.entity';
 import { CreateDistributionInput } from '../dto/distributionDTO/create-distribution.input';
 import { UpdateDistributionInput } from '../dto/distributionDTO/update-distrivution.input';
@@ -25,6 +25,7 @@ import { ExpenseReport } from '../../reports/dto/expense-report.output';
 import { ContainerReport } from '../../reports/dto/product-inventory-report.output';
 import { RouteError, RouteErrorCode } from 'src/exceptions/route-error';
 import { ProductError, ProductErrorCode } from 'src/exceptions/product-error';
+import { DefaultArgs } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class DistributionService {
@@ -302,11 +303,61 @@ export class DistributionService {
       await tx.note.deleteMany({
         where: { distribution_id: distribution.id },
       });
-      await tx.product_inventory.update({
-        where: { id: distribution.product_inventory_id },
-        data: { amount: { decrement: distribution.broken_containers } },
-      });
+      await this.updateContainerInventory(tx, distribution, distribution_id);
+
       return true;
+    });
+  }
+
+  private async updateContainerInventory(
+    tx: Omit<
+      PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>,
+      '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+    >,
+    distribution: {
+      id: number;
+      date: Date;
+      load_up: number;
+      broken_containers: number;
+      update_at: Date;
+      status: $Enums.distribution_status;
+      delete_at: Date;
+      route_id: number;
+      product_inventory_id: number;
+    },
+    distribution_id: number,
+  ) {
+    const containerReport = await this.prisma.transaction_container.groupBy({
+      by: ['type'],
+      _sum: { value: true },
+      where: { distribution_id },
+    });
+
+    const total_borrowed = containerReport.reduce(
+      (a, b) =>
+        a +
+        (b.type == $Enums.transaction_container_type.BORROWED
+          ? b._sum.value
+          : 0),
+      0,
+    );
+    const total_returned = containerReport.reduce(
+      (a, b) =>
+        a +
+        (b.type == $Enums.transaction_container_type.RETURNED
+          ? b._sum.value
+          : 0),
+      0,
+    );
+
+    await tx.product_inventory.update({
+      where: { id: distribution.product_inventory_id },
+      data: {
+        amount: {
+          increment:
+            total_returned - total_borrowed - distribution.broken_containers,
+        },
+      },
     });
   }
 

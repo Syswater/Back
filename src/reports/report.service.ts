@@ -29,7 +29,7 @@ export class ReportService {
       return {
         method: item.payment_method,
         value: item._sum.value,
-        date: moment(item.date).format('DD/MM/YYYY'),
+        date: moment.utc(item.date).format('DD/MM/YYYY'),
       };
     });
 
@@ -51,14 +51,14 @@ export class ReportService {
     const report = await this.prisma.transaction_payment.groupBy({
       by: ['payment_method', 'date'],
       _sum: { value: true },
-      where: { date: { gte: initDate, lte: endDate }, customer: { route_id } },
+      where: { date: { gte: initDate, lt: endDate }, customer: { route_id } },
     });
 
     const per_method = report.map((item) => {
       return {
         method: item.payment_method,
         value: item._sum.value,
-        date: moment(item.date).format('DD/MM/YYYY'),
+        date: moment.utc(item.date).format('DD/MM/YYYY'),
       };
     });
 
@@ -95,7 +95,7 @@ export class ReportService {
       by: ['expense_category_id', 'date'],
       _sum: { value: true },
       where: {
-        date: { gte: initDate, lte: endDate },
+        date: { gte: initDate, lt: endDate },
         distribution: { route_id },
       },
     });
@@ -135,6 +135,11 @@ export class ReportService {
   async getContainerReportByDistribution(
     distribution_id: number,
   ): Promise<ContainerReport> {
+    const distribution: distribution =
+      await this.prisma.distribution.findFirstOrThrow({
+        where: { id: distribution_id },
+      });
+
     const per_type: {
       id: number;
       product_name: string;
@@ -146,11 +151,6 @@ export class ReportService {
     const container_types: product_inventory[] =
       await this.prisma.product_inventory.findMany({
         where: { is_container: 1 },
-      });
-
-    const distribution: distribution =
-      await this.prisma.distribution.findFirstOrThrow({
-        where: { id: distribution_id },
       });
 
     for (const type of container_types) {
@@ -188,6 +188,73 @@ export class ReportService {
       total_borrowed,
       total_returned,
       total_broken: distribution.broken_containers,
+      per_type,
+    };
+  }
+
+  async getContainerReportByRoute(
+    input: ReportByRouteInput,
+  ): Promise<ContainerReport> {
+    const { route_id, initDate, endDate } = input;
+
+    const per_type: {
+      id: number;
+      product_name: string;
+      type: $Enums.transaction_container_type;
+      value: number;
+      date: Date;
+    }[] = [];
+
+    const container_types: product_inventory[] =
+      await this.prisma.product_inventory.findMany({
+        where: { is_container: 1 },
+      });
+
+    for (const type of container_types) {
+      const result = await this.prisma.transaction_container.groupBy({
+        by: ['type', 'date'],
+        _sum: { value: true },
+        where: {
+          distribution: { route_id },
+          product_inventory_id: type.id,
+          date: { gte: initDate, lt: endDate },
+        },
+      });
+
+      for (const value of result) {
+        per_type.push({
+          id: type.id,
+          product_name: type.product_name,
+          type: value.type,
+          date: value.date,
+          value: value._sum.value,
+        });
+      }
+    }
+
+    const total_borrowed = per_type.reduce(
+      (a, b) =>
+        a +
+        (b.type == $Enums.transaction_container_type.BORROWED ? b.value : 0),
+      0,
+    );
+    const total_returned = per_type.reduce(
+      (a, b) =>
+        a +
+        (b.type == $Enums.transaction_container_type.RETURNED ? b.value : 0),
+      0,
+    );
+    const total_broken: number = (
+      await this.prisma.distribution.aggregate({
+        _sum: { broken_containers: true },
+        where: { route_id },
+      })
+    )._sum.broken_containers;
+
+    return {
+      total_borrowed,
+      total_returned,
+      total_broken,
       per_type,
     };
   }
