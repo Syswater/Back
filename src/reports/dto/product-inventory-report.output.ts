@@ -8,7 +8,6 @@ export class ContainerReport {
     id: number;
     product_name: string;
     type: $Enums.transaction_container_type;
-    date: Date;
     value: number;
   }[];
 }

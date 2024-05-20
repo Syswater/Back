@@ -79,7 +79,7 @@ export class ReportService {
     distribution_id: number,
   ): Promise<ExpenseReport> {
     const report = await this.prisma.expense.groupBy({
-      by: ['expense_category_id', 'date'],
+      by: ['expense_category_id'],
       _sum: { value: true },
       where: { distribution_id },
     });
@@ -92,7 +92,7 @@ export class ReportService {
   ): Promise<ExpenseReport> {
     const { route_id, initDate, endDate } = input;
     const report = await this.prisma.expense.groupBy({
-      by: ['expense_category_id', 'date'],
+      by: ['expense_category_id'],
       _sum: { value: true },
       where: {
         date: { gte: initDate, lt: endDate },
@@ -110,7 +110,6 @@ export class ReportService {
     const per_category: {
       category: expense_category;
       value: number;
-      date: Date;
     }[] = [];
 
     for (const category of categories) {
@@ -121,7 +120,6 @@ export class ReportService {
       per_category.push({
         category,
         value: item?._sum.value ?? 0,
-        date: item?.date ?? undefined,
       });
     }
 
@@ -145,7 +143,6 @@ export class ReportService {
       product_name: string;
       type: $Enums.transaction_container_type;
       value: number;
-      date: Date;
     }[] = [];
 
     const container_types: product_inventory[] =
@@ -165,7 +162,6 @@ export class ReportService {
           id: type.id,
           product_name: type.product_name,
           type: value.type,
-          date: value.date,
           value: value._sum.value,
         });
       }
@@ -202,7 +198,6 @@ export class ReportService {
       product_name: string;
       type: $Enums.transaction_container_type;
       value: number;
-      date: Date;
     }[] = [];
 
     const container_types: product_inventory[] =
@@ -212,7 +207,7 @@ export class ReportService {
 
     for (const type of container_types) {
       const result = await this.prisma.transaction_container.groupBy({
-        by: ['type', 'date'],
+        by: ['type'],
         _sum: { value: true },
         where: {
           distribution: { route_id },
@@ -226,7 +221,6 @@ export class ReportService {
           id: type.id,
           product_name: type.product_name,
           type: value.type,
-          date: value.date,
           value: value._sum.value,
         });
       }
