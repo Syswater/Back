@@ -49,7 +49,11 @@ export class TransactionContainerService {
   async create(
     transaction: CreateTransactionContainer,
   ): Promise<TransactionContainerDto> {
-    const { customer_id, user_id, product_inventroy_id } = transaction;
+    const {
+      customer_id,
+      user_id,
+      product_inventory_id: product_inventroy_id,
+    } = transaction;
     await this.prisma.customer.findFirstOrThrow({
       where: { id: customer_id, delete_at: null },
     });

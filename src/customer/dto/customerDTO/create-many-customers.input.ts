@@ -51,7 +51,7 @@ export class ExcelRow {
   @IsInt()
   @Min(0)
   @IsNotEmpty()
-  product_inventroy_id: number;
+  product_inventory_id: number;
 }
 
 export async function validateExcelData(filePath) {

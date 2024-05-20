@@ -32,22 +32,23 @@ model customer {
 }
 
 model distribution {
-  id                   Int                  @id @default(autoincrement())
-  date                 DateTime             @db.Date
-  load_up              Int
-  broken_containers    Int
-  update_at            DateTime             @default(now()) @db.Timestamp(0)
-  status               distribution_status? @default(PREORDER)
-  delete_at            DateTime?            @db.Timestamp(0)
-  route_id             Int
-  product_inventory_id Int
-  product_inventory    product_inventory    @relation(fields: [product_inventory_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_PRO_DIS")
-  route                route                @relation(fields: [route_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_ROU_DIS")
-  distribution_user    distribution_user[]
-  expense              expense[]
-  note                 note[]
-  order                order[]
-  sale                 sale[]
+  id                    Int                     @id @default(autoincrement())
+  date                  DateTime                @db.Date
+  load_up               Int
+  broken_containers     Int
+  update_at             DateTime                @default(now()) @db.Timestamp(0)
+  status                distribution_status?    @default(PREORDER)
+  delete_at             DateTime?               @db.Timestamp(0)
+  route_id              Int
+  product_inventory_id  Int
+  product_inventory     product_inventory       @relation(fields: [product_inventory_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_PRO_DIS")
+  route                 route                   @relation(fields: [route_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_ROU_DIS")
+  distribution_user     distribution_user[]
+  expense               expense[]
+  note                  note[]
+  order                 order[]
+  sale                  sale[]
+  transaction_container transaction_container[]
 
   @@index([product_inventory_id], map: "FK_PRO_DIS_idx")
   @@index([route_id], map: "FK_ROU_DIS_idx")
@@ -171,14 +172,17 @@ model transaction_container {
   delete_at            DateTime?                  @db.Timestamp(0)
   customer_id          Int
   user_id              Int
-  product_inventroy_id Int
+  product_inventory_id Int
+  distribution_id      Int
   customer             customer                   @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_CUS_TRA_CO")
-  product_inventory    product_inventory          @relation(fields: [product_inventroy_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_PRO_TRA_CO")
+  distribution         distribution               @relation(fields: [distribution_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DIS_TRA_CO")
+  product_inventory    product_inventory          @relation(fields: [product_inventory_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_PRO_TRA_CO")
   user                 user                       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_USE_TRA_CO")
 
   @@index([customer_id], map: "FK_CUS_TRA_CO_idx")
-  @@index([product_inventroy_id], map: "FK_PRO_TRA_CO_idx")
+  @@index([product_inventory_id], map: "FK_PRO_TRA_CO_idx")
   @@index([user_id], map: "FK_USE_TRA_CO_idx")
+  @@index([distribution_id], map: "FK_DIS_TRA_CO")
 }
 
 model transaction_payment {

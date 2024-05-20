@@ -1,8 +1,14 @@
+import { $Enums } from '@prisma/client';
+
 export class ContainerReport {
-  id: number;
-  product_name: string;
-  borrowed: number;
-  returned: number;
-  broken: number;
-  total_in_inventory: number;
+  total_broken: number;
+  total_borrowed: number;
+  total_returned: number;
+  per_type: {
+    id: number;
+    product_name: string;
+    type: $Enums.transaction_container_type;
+    date: Date;
+    value: number;
+  }[];
 }

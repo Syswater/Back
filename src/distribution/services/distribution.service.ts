@@ -20,6 +20,9 @@ import { DistributionReport } from '../../reports/dto/distribution-report.output
 import { OpenDistributionInput } from '../dto/distributionDTO/open-distribution.input';
 import { CloseDistributionInput } from '../dto/distributionDTO/close-distribution.input';
 import { ReportService } from '../../reports/report.service';
+import { SaleReport } from '../../reports/dto/sale-report.output';
+import { ExpenseReport } from '../../reports/dto/expense-report.output';
+import { ContainerReport } from '../../reports/dto/product-inventory-report.output';
 
 @Injectable()
 export class DistributionService {
@@ -290,14 +293,24 @@ export class DistributionService {
   }
 
   async getReport(id: number): Promise<DistributionReport> {
-    const saleReport = await this.reportService.getSaleReportByDistribution(id);
-
+    const saleReport: SaleReport =
+      await this.reportService.getSaleReportByDistribution(id);
+    const expenseReport: ExpenseReport =
+      await this.reportService.getExpenseReportByDistribution(id);
+    const containerReport: ContainerReport =
+      await this.reportService.getContainerReportByDistribution(id);
+    const load: number = (
+      await this.prisma.distribution.findFirstOrThrow({
+        where: { id },
+        select: { load_up: true },
+      })
+    ).load_up;
     return {
       saleReport,
-      expenseReport: undefined,
-      balance: undefined,
-      containerReport: undefined,
-      load: undefined,
+      expenseReport,
+      balance: saleReport.total - expenseReport.total,
+      containerReport,
+      load,
     };
   }
 }

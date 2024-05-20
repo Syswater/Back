@@ -6,6 +6,6 @@ export class DistributionReport {
   saleReport: SaleReport;
   expenseReport: ExpenseReport;
   balance: number;
-  containerReport: ContainerReport[];
+  containerReport: ContainerReport;
   load: number;
 }

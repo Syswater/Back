@@ -1,6 +1,6 @@
 import { IsDateString, IsInt, IsNotEmpty, IsPositive } from 'class-validator';
 
-export class SaleReportByRouteInput {
+export class ReportByRouteInput {
   @IsInt()
   @IsPositive()
   @IsNotEmpty()
