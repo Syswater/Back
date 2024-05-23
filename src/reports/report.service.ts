@@ -152,7 +152,7 @@ export class ReportService {
 
     for (const type of container_types) {
       const result = await this.prisma.transaction_container.groupBy({
-        by: ['type', 'date'],
+        by: ['type'],
         _sum: { value: true },
         where: { distribution_id, product_inventory_id: type.id },
       });
