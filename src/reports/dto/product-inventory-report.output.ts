@@ -7,7 +7,7 @@ export class ContainerReport {
   per_type: {
     id: number;
     product_name: string;
-    type: $Enums.transaction_container_type;
+    type: $Enums.transaction_container_type | "BROKEN";
     value: number;
   }[];
 }

@@ -51,7 +51,7 @@ export class ReportService {
     const report = await this.prisma.transaction_payment.groupBy({
       by: ['payment_method', 'date'],
       _sum: { value: true },
-      where: { date: { gte: initDate, lt: endDate }, customer: { route_id } },
+      where: { date: { gte: initDate, lte: endDate }, customer: { route_id } },
     });
 
     const per_method = report.map((item) => {
@@ -95,7 +95,7 @@ export class ReportService {
       by: ['expense_category_id'],
       _sum: { value: true },
       where: {
-        date: { gte: initDate, lt: endDate },
+        date: { gte: initDate, lte: endDate },
         distribution: { route_id },
       },
     });
@@ -141,7 +141,7 @@ export class ReportService {
     const per_type: {
       id: number;
       product_name: string;
-      type: $Enums.transaction_container_type;
+      type: $Enums.transaction_container_type | "BROKEN";
       value: number;
     }[] = [];
 
@@ -180,6 +180,15 @@ export class ReportService {
       0,
     );
 
+    if(distribution.broken_containers){
+      per_type.push({
+        id: distribution.product_inventory_id,
+        type: "BROKEN",
+        value: distribution.broken_containers,
+        product_name: container_types.find( x => x.id == distribution.product_inventory_id).product_name
+      })
+    }
+
     return {
       total_borrowed,
       total_returned,
@@ -196,7 +205,7 @@ export class ReportService {
     const per_type: {
       id: number;
       product_name: string;
-      type: $Enums.transaction_container_type;
+      type: $Enums.transaction_container_type | "BROKEN";
       value: number;
     }[] = [];
 
@@ -212,7 +221,7 @@ export class ReportService {
         where: {
           distribution: { route_id },
           product_inventory_id: type.id,
-          date: { gte: initDate, lt: endDate },
+          date: { gte: initDate, lte: endDate },
         },
       });
 
@@ -238,12 +247,25 @@ export class ReportService {
         (b.type == $Enums.transaction_container_type.RETURNED ? b.value : 0),
       0,
     );
-    const total_broken: number = (
-      await this.prisma.distribution.aggregate({
+   
+    const broken = (
+      await this.prisma.distribution.groupBy({
+        by: ["product_inventory_id"],
         _sum: { broken_containers: true },
-        where: { route_id },
+        where: { route_id, date: { gte: initDate, lte: endDate } },
       })
-    )._sum.broken_containers;
+    )
+
+    broken.forEach( x => {
+      per_type.push({
+        id: x.product_inventory_id,
+        type: "BROKEN",
+        value: x._sum.broken_containers,
+        product_name: container_types.find( y => y.id == x.product_inventory_id).product_name
+      })
+    })
+
+    const total_broken: number = per_type.reduce( (a,b)=> a + (b.type == 'BROKEN'? b.value: 0), 0);
 
     return {
       total_borrowed,
