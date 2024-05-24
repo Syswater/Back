@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { DistributionDto } from '../dto/distributionDTO/distribution.output';
-import { $Enums } from '@prisma/client';
+import { $Enums, Prisma, PrismaClient } from '@prisma/client';
 import { Distribution } from '../entities/distribution.entity';
 import { CreateDistributionInput } from '../dto/distributionDTO/create-distribution.input';
 import { UpdateDistributionInput } from '../dto/distributionDTO/update-distrivution.input';
@@ -20,8 +20,12 @@ import { DistributionReport } from '../../reports/dto/distribution-report.output
 import { OpenDistributionInput } from '../dto/distributionDTO/open-distribution.input';
 import { CloseDistributionInput } from '../dto/distributionDTO/close-distribution.input';
 import { ReportService } from '../../reports/report.service';
+import { SaleReport } from '../../reports/dto/sale-report.output';
+import { ExpenseReport } from '../../reports/dto/expense-report.output';
+import { ContainerReport } from '../../reports/dto/product-inventory-report.output';
 import { RouteError, RouteErrorCode } from 'src/exceptions/route-error';
 import { ProductError, ProductErrorCode } from 'src/exceptions/product-error';
+import { DefaultArgs } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class DistributionService {
@@ -110,11 +114,19 @@ export class DistributionService {
     const route = await this.prisma.route.findFirst({
       where: { id: distribution.route_id, delete_at: null },
     });
-    if(!route) throw new RouteError(RouteErrorCode.ROUTE_NOT_FOUND, `La distribución no se puede crear porque no existe una ruta con el id ${route_id}`);
+    if (!route)
+      throw new RouteError(
+        RouteErrorCode.ROUTE_NOT_FOUND,
+        `La distribución no se puede crear porque no existe una ruta con el id ${route_id}`,
+      );
     const product = await this.prisma.product_inventory.findFirst({
       where: { id: distribution.product_inventory_id, delete_at: null },
     });
-    if(!product) throw new ProductError(ProductErrorCode.PRODUCT_NOT_FOUND, `La distribución no se puede crear porque no existe un producto con el id ${distribution.product_inventory_id}`);
+    if (!product)
+      throw new ProductError(
+        ProductErrorCode.PRODUCT_NOT_FOUND,
+        `La distribución no se puede crear porque no existe un producto con el id ${distribution.product_inventory_id}`,
+      );
     const existingDistribution = await this.prisma.distribution.findFirst({
       where: {
         route_id,
@@ -179,6 +191,13 @@ export class DistributionService {
     statusInput: ChangeStatusDistributionInput,
   ): Promise<DistributionDto> {
     const { id, status } = statusInput;
+
+    if (status == $Enums.distribution_status.PREORDER)
+      throw new DistributionError(
+        DistributionErrorCode.STATUS_PREORDER_CHANGE,
+        `No se puede cambiar al estado PREORDER`,
+      );
+
     const distribution = await this.prisma.distribution.findFirstOrThrow({
       where: {
         id,
@@ -186,11 +205,7 @@ export class DistributionService {
         status: { not: $Enums.distribution_status.CLOSED },
       },
     });
-    if (status == $Enums.distribution_status.PREORDER)
-      throw new DistributionError(
-        DistributionErrorCode.STATUS_PREORDER_CHANGE,
-        `No se puede cambiar al estado PREORDER`,
-      );
+
     if (
       distribution.status == $Enums.distribution_status.PREORDER &&
       status != $Enums.distribution_status.OPENED
@@ -199,22 +214,17 @@ export class DistributionService {
         DistributionErrorCode.STATUS_PREORDER_CHANGE,
         `De estado PREORDER solo se puede cambiar a estado OPENED`,
       );
+
     if (
       distribution.status == $Enums.distribution_status.OPENED &&
-      status != $Enums.distribution_status.CLOSED
-    )
-      throw new DistributionError(
-        DistributionErrorCode.STATUS_PREORDER_CHANGE,
-        `De estado OPENED solo se puede cambiar a estado CLOSED o CLOSE_REQUEST`,
-      );
-    if (
-      distribution.status == $Enums.distribution_status.OPENED &&
+      status != $Enums.distribution_status.CLOSED &&
       status != $Enums.distribution_status.CLOSE_REQUEST
     )
       throw new DistributionError(
         DistributionErrorCode.STATUS_PREORDER_CHANGE,
         `De estado OPENED solo se puede cambiar a estado CLOSED o CLOSE_REQUEST`,
       );
+
     const updateDistribution = await this.prisma.distribution.update({
       where: { id },
       data: { status },
@@ -231,7 +241,7 @@ export class DistributionService {
     const distribution = await this.prisma.distribution.findFirst({
       where: { id, delete_at: null },
     });
-    if(!distribution){
+    if (!distribution) {
       throw new DistributionError(
         DistributionErrorCode.DISTRIBUTION_NOT_FOUND,
         `No existe una distribución con id ${id}`,
@@ -291,23 +301,83 @@ export class DistributionService {
       await tx.note.deleteMany({
         where: { distribution_id: distribution.id },
       });
-      await tx.product_inventory.update({
-        where: { id: distribution.product_inventory_id },
-        data: { amount: { decrement: distribution.broken_containers } },
-      });
+      await this.updateContainerInventory(tx, distribution, distribution_id);
+
       return true;
     });
   }
 
-  async getReport(id: number): Promise<DistributionReport> {
-    const saleReport = await this.reportService.getSaleReportByDistribution(id);
+  private async updateContainerInventory(
+    tx: Omit<
+      PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>,
+      '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+    >,
+    distribution: {
+      id: number;
+      date: Date;
+      load_up: number;
+      broken_containers: number;
+      update_at: Date;
+      status: $Enums.distribution_status;
+      delete_at: Date;
+      route_id: number;
+      product_inventory_id: number;
+    },
+    distribution_id: number,
+  ) {
+    const containerReport = await this.prisma.transaction_container.groupBy({
+      by: ['type'],
+      _sum: { value: true },
+      where: { distribution_id },
+    });
 
+    const total_borrowed = containerReport.reduce(
+      (a, b) =>
+        a +
+        (b.type == $Enums.transaction_container_type.BORROWED
+          ? b._sum.value
+          : 0),
+      0,
+    );
+    const total_returned = containerReport.reduce(
+      (a, b) =>
+        a +
+        (b.type == $Enums.transaction_container_type.RETURNED
+          ? b._sum.value
+          : 0),
+      0,
+    );
+
+    await tx.product_inventory.update({
+      where: { id: distribution.product_inventory_id },
+      data: {
+        amount: {
+          increment:
+            total_returned - total_borrowed - distribution.broken_containers,
+        },
+      },
+    });
+  }
+
+  async getReport(id: number): Promise<DistributionReport> {
+    const saleReport: SaleReport =
+      await this.reportService.getSaleReportByDistribution(id);
+    const expenseReport: ExpenseReport =
+      await this.reportService.getExpenseReportByDistribution(id);
+    const containerReport: ContainerReport =
+      await this.reportService.getContainerReportByDistribution(id);
+    const load: number = (
+      await this.prisma.distribution.findFirstOrThrow({
+        where: { id },
+        select: { load_up: true },
+      })
+    ).load_up;
     return {
       saleReport,
-      expenseReport: undefined,
-      balance: undefined,
-      containerReport: undefined,
-      load: undefined,
+      expenseReport,
+      balance: saleReport.total - expenseReport.total,
+      containerReport,
+      load,
     };
   }
 }

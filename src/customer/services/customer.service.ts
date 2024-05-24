@@ -177,7 +177,7 @@ export class CustomerService {
       customer.route_order = await this.validateRouteOrder(
         customer.route_order,
         route.id,
-        true
+        true,
       );
       this.updateRouteOrder({
         current_route_order: customer.route_order,
@@ -458,6 +458,7 @@ export class CustomerService {
                   value: containers,
                   type: 'BORROWED',
                   user_id: 10,
+                  distribution_id: undefined,
                   product_inventory_id,
                 },
               }

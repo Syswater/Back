@@ -10,4 +10,5 @@ export class TransactionContainerDto {
   user_id: number;
   product_inventory_id: number;
   user_name: string;
+  distribution_id: number;
 }
