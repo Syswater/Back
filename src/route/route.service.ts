@@ -46,19 +46,27 @@ export class RouteService {
       name: route.name,
       price: route.price,
       weekdays: convertWeekdaysToEnum(splitWeekdaysString(route.weekdays)),
-      status: whit_status
-        ? route.distribution[0]
-          ? RouteStatus[
-              route.distribution[0].status as keyof typeof RouteStatus
-            ]
-          : RouteStatus.WHITOUT
-        : undefined,
-      distribution_id: whit_status
-        ? route.distribution[0]
-          ? route.distribution[0].id
-          : undefined
-        : undefined,
+      status: this.proccessStatusQuery(whit_status, route),
+      distribution_id: this.proccessDistributionId(whit_status, route),
     }));
+  }
+
+  private proccessDistributionId(whit_status: boolean, route: { id: number; name: string; location: string; weekdays: string; price: number; distribution: { status: $Enums.distribution_status; id: number; }[]; }): number {
+    if(whit_status){
+      return route.distribution[0]? route.distribution[0].id : undefined
+    }else {
+      return undefined
+    }
+  }
+
+  private proccessStatusQuery(whit_status: boolean, route: { distribution: { id: number; status: $Enums.distribution_status; }[]; id: number; name: string; location: string; weekdays: string; price: number; }): RouteStatus {
+    if(whit_status){
+      return route.distribution[0]
+      ? RouteStatus[route.distribution[0].status as keyof typeof RouteStatus]
+      : RouteStatus.WHITOUT
+    }else{
+      return undefined
+    }
   }
 
   private async applySearchFilter(filter: string, status: RouteStatus) {

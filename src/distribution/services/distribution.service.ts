@@ -55,11 +55,7 @@ export class DistributionService {
       where = {
         status: { in: status },
         route_id,
-        date: initDate
-          ? finalDate
-            ? { gte: initDate.toISOString(), lte: finalDate.toISOString() }
-            : { date: { equals: initDate.toISOString() } }
-          : {},
+        date: this.getDateQuery(initDate, finalDate),
       };
     }
 
@@ -105,6 +101,18 @@ export class DistributionService {
           : undefined,
       });
     });
+  }
+
+  private getDateQuery(initDate: Date, finalDate: Date) {
+    if(initDate){
+      if(finalDate){
+       return finalDate
+        ? { gte: initDate.toISOString(), lte: finalDate.toISOString() }
+        : { date: { equals: initDate.toISOString() } }
+      }
+    }else{
+      return {}
+    }
   }
 
   async create(
