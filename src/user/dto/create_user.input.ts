@@ -1,4 +1,4 @@
-import { ArrayMinSize, IsArray, IsEnum, IsNotEmpty, IsNumberString, IsString, IsStrongPassword, Min, MinLength } from "class-validator";
+import { ArrayMinSize, IsArray, IsEnum, IsNotEmpty, IsNumberString, IsString } from "class-validator";
 import { Role } from "../../constants/role";
 
 export class CreateUserInput {

@@ -12,7 +12,7 @@ export class ExpenseCategoryController{
     @Get('findAll')
     async findAll():Promise<ExpenseCategoryDto[]>{
         try {
-            return this.expenseCategoryService.getExpenseCategories();
+            return await this.expenseCategoryService.getExpenseCategories();
         } catch (error) {
             throw new BadRequestException(error);
         }

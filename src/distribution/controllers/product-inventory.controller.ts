@@ -13,7 +13,7 @@ export class ProductInventoryController{
     @Get('findAll')
     async findAll():Promise<ProductInventoryDto[]>{
         try {
-            return this.productService.getProducts();
+            return await this.productService.getProducts();
         } catch (error) {
             throw new BadRequestException(error);
         }

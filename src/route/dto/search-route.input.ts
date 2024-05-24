@@ -10,7 +10,7 @@ export class SearchRouteInput {
     @IsBoolean()
     @IsNotEmpty()
     @IsOptional()
-    whit_status?: boolean | false;
+    whit_status?: boolean;
 
     @IsEnum(RouteStatus)
     status?: RouteStatus

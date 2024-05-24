@@ -1,7 +1,6 @@
-import { BadRequestException, Body, Controller, Delete, Get, Post, Put, Query } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Delete, Get, Post, Put } from "@nestjs/common";
 import { Auth } from "src/auth/decorators/auth.decorator";
 import { NoteService } from '../services/note.service';
-import { SearchNoteInput } from "../dto/noteDTO/search-note.input";
 import { NoteDto } from "../dto/noteDTO/note.output";
 import { CreateNoteInput } from "../dto/noteDTO/create-note.input";
 import { UpdateNoteInput } from "../dto/noteDTO/update-note.input";

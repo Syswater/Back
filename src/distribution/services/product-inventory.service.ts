@@ -44,7 +44,7 @@ export class ProductInventoryService{
 
     private getProductDto(product:ProductInventory): ProductInventoryDto {
         const { is_container, update_at, delete_at, ...info } = product;
-        return { ...info, is_container: is_container === 0? false:true };
+        return { ...info, is_container: is_container !== 0 };
     }
 
 }

@@ -54,7 +54,7 @@ export class UserController {
   @Post('create')
   async creteUser(@Body() input: CreateUserInput) {
     try {
-      return this.userService.createUser(input);
+      return await this.userService.createUser(input);
     } catch (error) {
       throw new BadRequestException(
         'Los datos proporcionados son incorrectos',
@@ -67,7 +67,7 @@ export class UserController {
   @Delete('delete')
   async deleteUser(@Body() input: DeleteUserInput) {
     try {
-      return this.userService.delete(input.id);
+      return await this.userService.delete(input.id);
     } catch (error) {
       throw new BadRequestException(
         'Los datos proporcionados son incorrectos',
@@ -80,7 +80,7 @@ export class UserController {
   @Put('update')
   async updateUser(@Body() input: UpdateUserInput) {
     try {
-      return this.userService.update(input);
+      return await this.userService.update(input);
     } catch (error) {
       throw new BadRequestException(
         'Los datos proporcionados son incorrectos',
@@ -93,7 +93,7 @@ export class UserController {
   @Put('change-password')
   async changePassword(@Body() input: ChangePasswordInput) {
     try {
-      return this.userService.changePassword(input);
+      return await this.userService.changePassword(input);
     } catch (error) {
       throw new BadRequestException(
         'Los datos proporcionados son incorrectos',

@@ -1,4 +1,4 @@
-import { Equals, IsBoolean, IsDateString, IsInt, IsNotEmpty, IsOptional, IsPositive, IsString } from "class-validator";
+import { Equals, IsBoolean, IsInt, IsNotEmpty, IsOptional, IsPositive, IsString } from "class-validator";
 
 export class UpdateExpenseInput{
 

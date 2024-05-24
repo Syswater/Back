@@ -141,7 +141,7 @@ export class UserService {
 
     if (await bcrypt.compare(oldPassword, user.password)) {
       newPassword = await bcrypt.hash(newPassword, 16);
-      user = await this.prisma.user.update({
+      await this.prisma.user.update({
         where: { id: user.id },
         data: { password: newPassword },
       });

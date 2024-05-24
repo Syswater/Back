@@ -1,4 +1,4 @@
-import { IsDate, IsDateString, IsInt, IsNotEmpty, IsPositive, IsString, Min } from "class-validator";
+import { IsDateString, IsInt, IsNotEmpty, IsPositive, IsString, Min } from "class-validator";
 
 export class CreateOrderInput{
     @IsNotEmpty({message: 'La cantidad no puede estar vacia'})

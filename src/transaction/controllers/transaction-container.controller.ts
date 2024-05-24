@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { TransactionContainerService } from '../services/transaction-container.service';
 import { CreateTransactionContainer } from '../dto/transactionContainerDTO/create-transaction-container.input';
 import { TransactionContainerDto } from '../dto/transactionContainerDTO/transaction-container.output';
@@ -32,7 +32,7 @@ export class TransactionContainerController {
     @Post('create')
     async create(@Body() transaction: CreateTransactionContainer ):Promise<TransactionContainerDto>{
         try {
-            const newTransaction = this.transactionService.create(transaction);
+            const newTransaction = await this.transactionService.create(transaction);
             return newTransaction;
         } catch (error) {
             throw new BadRequestException(error);

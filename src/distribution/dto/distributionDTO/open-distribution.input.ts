@@ -1,4 +1,4 @@
-import { IsArray, IsInt, IsPositive, Min } from 'class-validator';
+import { IsArray, IsInt, IsPositive } from 'class-validator';
 
 export class OpenDistributionInput {
   @IsInt()
