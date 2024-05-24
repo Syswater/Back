@@ -36,14 +36,14 @@ export class DistributionController {
     try {
       const inputStatus: $Enums.distribution_status[] = [];
       for (let stat of status ? status.split(',') : []) {
-        stat = stat.trim();
-        if (!$Enums.distribution_status[stat.replace(/\s+/g, '')]) {
+        const actualStatus = stat.trim();
+        if (!$Enums.distribution_status[actualStatus.replace(/\s+/g, '')]) {
           throw new BadRequestException(
             'Los datos proporcionados son incorrectos',
           );
         }
-        if ($Enums.distribution_status[stat])
-          inputStatus.push(stat as $Enums.distribution_status);
+        if ($Enums.distribution_status[actualStatus])
+          inputStatus.push(actualStatus as $Enums.distribution_status);
       }
 
       return this.distributionService.getDistribution({
