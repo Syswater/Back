@@ -29,7 +29,7 @@ export class ReportService {
       return {
         method: item.payment_method,
         value: item._sum.value,
-        date: moment.utc(item.date).format('DD/MM/YYYY'),
+        date: moment(item.date).format('DD/MM/YYYY'),
       };
     });
 
@@ -48,17 +48,20 @@ export class ReportService {
 
   async getSaleReportByRoute(input: ReportByRouteInput): Promise<SaleReport> {
     const { route_id, initDate, endDate } = input;
+    console.log("🚀 ~ ReportService ~ getSaleReportByRoute ~  initDate, endDate:",  initDate, endDate)
     const report = await this.prisma.transaction_payment.groupBy({
       by: ['payment_method', 'date'],
       _sum: { value: true },
       where: { date: { gte: initDate, lte: endDate }, customer: { route_id } },
     });
 
+
+
     const per_method = report.map((item) => {
       return {
         method: item.payment_method,
         value: item._sum.value,
-        date: moment.utc(item.date).format('DD/MM/YYYY'),
+        date: moment(item.date).utc(false).format('DD/MM/YYYY'),
       };
     });
 
