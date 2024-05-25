@@ -48,13 +48,12 @@ export class ReportService {
 
   async getSaleReportByRoute(input: ReportByRouteInput): Promise<SaleReport> {
     const { route_id, initDate, endDate } = input;
-    console.log("🚀 ~ ReportService ~ getSaleReportByRoute ~  initDate, endDate:",  initDate, endDate)
     const report = await this.prisma.transaction_payment.groupBy({
       by: ['payment_method', 'date'],
       _sum: { value: true },
       where: { date: { gte: initDate, lte: endDate }, customer: { route_id } },
+      orderBy: {date: 'asc'}
     });
-
 
 
     const per_method = report.map((item) => {
