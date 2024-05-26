@@ -221,7 +221,7 @@ export class ReportService {
         by: ['type'],
         _sum: { value: true },
         where: {
-          distribution: { route_id },
+          customer: { route_id },
           product_inventory_id: type.id,
           date: { gte: initDate, lte: endDate },
         },
